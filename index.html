@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flappy Bird</title>
+    <title>Flappy Bird 3D</title>
     <style>
         body {
             margin: 0;
             overflow: hidden;
-            background: linear-gradient(270deg, red, green, blue, yellow);
+            background: linear-gradient(270deg, #87CEEB, #1E90FF);
             background-size: 400% 400%;
-            animation: gradientBG 5s ease infinite;
+            animation: gradientBG 10s ease infinite;
             font-family: Arial, sans-serif;
             text-align: center;
         }
@@ -52,11 +52,10 @@
         let bird = { x: 100, y: canvas.height / 2, width: 120, height: 90, gravity: 0, lift: -8, velocity: 0 };
         let pipes = [];
         let score = 0;
-        let highScore = 0;
+        let highScore = localStorage.getItem("highScore") || 0;
         let gameOver = false;
         let gameStarted = false;
         let frames = 0;
-        let gravityIncreaseTime = 0;
 
         document.addEventListener("keydown", (event) => { if (event.code === "Space") handleJump(); });
         document.addEventListener("touchstart", handleJump);
@@ -78,7 +77,10 @@
         }
 
         function resetGame() {
-            if (score > highScore) highScore = score;
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem("highScore", highScore);
+            }
             bird.y = canvas.height / 2;
             bird.velocity = 0;
             bird.gravity = 0;
@@ -86,7 +88,6 @@
             score = 0;
             gameOver = false;
             frames = 0;
-            gravityIncreaseTime = 0;
         }
 
         function drawBird() {
@@ -94,17 +95,22 @@
         }
 
         function drawPipes() {
-            ctx.fillStyle = "green";
             pipes.forEach(pipe => {
+                let gradient = ctx.createLinearGradient(pipe.x, 0, pipe.x + pipe.width, 0);
+                gradient.addColorStop(0, "#228B22");
+                gradient.addColorStop(0.5, "#006400");
+                gradient.addColorStop(1, "#228B22");
+                ctx.fillStyle = gradient;
+
                 ctx.fillRect(pipe.x, 0, pipe.width, pipe.top);
                 ctx.fillRect(pipe.x, pipe.bottomY, pipe.width, pipe.bottom);
             });
         }
 
         function generatePipes() {
-            let gap = 200;
+            let gap = 300; // Increased gap width (1.5x original)
             let pipeHeight = Math.random() * (canvas.height / 2);
-            pipes.push({ x: canvas.width, width: 80, top: pipeHeight, bottomY: pipeHeight + gap, bottom: canvas.height - pipeHeight - gap, scored: false });
+            pipes.push({ x: canvas.width, width: 100, top: pipeHeight, bottomY: pipeHeight + gap, bottom: canvas.height - pipeHeight - gap, scored: false });
         }
 
         function updateGame() {
@@ -115,11 +121,7 @@
                 return;
             }
 
-            if (gravityIncreaseTime < 300) {
-                bird.gravity = (gravityIncreaseTime / 300) * 0.4;
-                gravityIncreaseTime++;
-            }
-            
+            bird.gravity = 0.4;
             bird.velocity += bird.gravity;
             bird.y += bird.velocity;
 
@@ -128,10 +130,10 @@
                 gameOver = true;
             }
 
-            if (frames % 100 === 0) generatePipes();
+            if (frames % 120 === 0) generatePipes();
 
             pipes.forEach(pipe => {
-                pipe.x -= 3;
+                pipe.x -= 3 + (score / 10); // Increasing pipe speed over time
                 if (!pipe.scored && pipe.x + pipe.width < bird.x) {
                     score++;
                     pipe.scored = true;
@@ -139,6 +141,16 @@
                 }
             });
             pipes = pipes.filter(pipe => pipe.x + pipe.width > 0);
+
+            pipes.forEach(pipe => {
+                if (
+                    bird.x < pipe.x + pipe.width && bird.x + bird.width > pipe.x &&
+                    (bird.y < pipe.top || bird.y + bird.height > pipe.bottomY)
+                ) {
+                    hitSound.play();
+                    gameOver = true;
+                }
+            });
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawBird();
