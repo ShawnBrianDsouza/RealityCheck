@@ -47,7 +47,7 @@
         let jumpSound = new Audio('jump.mp3');
         let hitSound = new Audio('hit.mp3');
 
-        let bird = { x: 100, y: canvas.height / 2, width: 60, height: 45, gravity: 0.5, lift: -8, velocity: 0 };
+        let bird = { x: 100, y: canvas.height / 2, width: 120, height: 90, gravity: 0.3, lift: -6, velocity: 0 };
         let pipes = [];
         let score = 0;
         let gameOver = false;
@@ -112,7 +112,7 @@
             }
 
             if (frames % 100 === 0) {
-                let gap = 200 + Math.random() * 50;
+                let gap = 300 + Math.random() * 75;
                 let pipeHeight = Math.random() * (canvas.height / 2);
                 pipes.push({ x: canvas.width, width: 80, top: pipeHeight, bottomY: pipeHeight + gap, bottom: canvas.height - pipeHeight - gap, scored: false });
             }
