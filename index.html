@@ -3,41 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LOL Full Screen</title>
+    <title>Flappy Bird</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            width: 100vw;
-            background: linear-gradient(45deg, red, yellow, blue, purple);
-            background-size: 400% 400%;
-            animation: bgAnimation 6s infinite alternate;
-            overflow: hidden;
+            text-align: center;
+            background-color: #70c5ce;
         }
-
-        @keyframes bgAnimation {
-            0% { background-position: 0% 0%; }
-            100% { background-position: 100% 100%; }
-        }
-
-        h1 {
-            font-size: 20vw; /* Automatically scales with screen size */
-            font-weight: bold;
-            color: white;
-            text-shadow: 10px 10px 20px rgba(0, 0, 0, 0.5);
-            user-select: none;
+        canvas {
+            display: block;
+            margin: auto;
+            background: url('https://i.imgur.com/rfTh8Zd.png');
         }
     </style>
 </head>
 <body>
-    <h1>Fuck You</h1>
+    <h1>Flappy Bird</h1>
+    <canvas id="canvas" width="320" height="480"></canvas>
+    <script>
+        let canvas = document.getElementById("canvas");
+        let ctx = canvas.getContext("2d");
+        
+        let birdImg = new Image();
+        birdImg.src = '/mnt/data/Screenshot 2025-01-23 085325-fotor-bg-remover-20250220205239.png';
+        
+        let bird = { x: 50, y: 150, width: 30, height: 30, gravity: 1.5, lift: -20, velocity: 0 };
+        let pipes = [];
+        let score = 0;
+        let gameOver = false;
+        
+        document.addEventListener("keydown", () => bird.velocity = bird.lift);
+        
+        function drawBird() {
+            ctx.drawImage(birdImg, bird.x, bird.y, bird.width, bird.height);
+        }
+        
+        function drawPipes() {
+            ctx.fillStyle = "green";
+            pipes.forEach(pipe => {
+                ctx.fillRect(pipe.x, 0, pipe.width, pipe.top);
+                ctx.fillRect(pipe.x, pipe.bottomY, pipe.width, pipe.bottom);
+            });
+        }
+        
+        function updateGame() {
+            if (gameOver) return;
+            bird.velocity += bird.gravity;
+            bird.y += bird.velocity;
+            
+            if (bird.y + bird.height >= canvas.height || bird.y <= 0) {
+                gameOver = true;
+            }
+            
+            if (frames % 100 === 0) {
+                let pipeHeight = Math.floor(Math.random() * 150) + 50;
+                pipes.push({ x: canvas.width, width: 40, top: pipeHeight, bottomY: pipeHeight + 100, bottom: canvas.height - pipeHeight - 100 });
+            }
+            
+            pipes.forEach(pipe => {
+                pipe.x -= 2;
+                if (pipe.x + pipe.width < 0) pipes.shift();
+                if (bird.x < pipe.x + pipe.width && bird.x + bird.width > pipe.x && (bird.y < pipe.top || bird.y + bird.height > pipe.bottomY)) {
+                    gameOver = true;
+                }
+                if (pipe.x === bird.x) score++;
+            });
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawBird();
+            drawPipes();
+            ctx.fillStyle = "black";
+            ctx.fillText("Score: " + score, 10, 20);
+            
+            frames++;
+            requestAnimationFrame(updateGame);
+        }
+        
+        let frames = 0;
+        updateGame();
+    </script>
 </body>
 </html>
