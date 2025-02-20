@@ -79,9 +79,11 @@
             bird.velocity += bird.gravity;
             bird.y += bird.velocity;
 
-            if (frames % 90 === 0) pipes.push({ x: canvas.width, gap: 150, height: Math.random() * (canvas.height - 300) + 50 });
+            if (frames % 90 === 0) {
+                let height = Math.random() * (canvas.height - 300) + 50;
+                pipes.push({ x: canvas.width, gap: 150, height });
+            }
             pipes.forEach(pipe => pipe.x -= 5);
-
             pipes = pipes.filter(pipe => pipe.x + 50 > 0);
 
             pipes.forEach(pipe => {
@@ -104,7 +106,7 @@
             ctx.fillStyle = "green";
             pipes.forEach(pipe => {
                 ctx.fillRect(pipe.x, 0, 50, pipe.height);
-                ctx.fillRect(pipe.x, pipe.height + pipe.gap, 50, canvas.height);
+                ctx.fillRect(pipe.x, pipe.height + pipe.gap, 50, canvas.height - pipe.height - pipe.gap);
             });
 
             ctx.fillStyle = "black";
