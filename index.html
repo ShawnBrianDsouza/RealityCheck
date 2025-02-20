@@ -8,17 +8,17 @@
         body {
             margin: 0;
             overflow: hidden;
-            background-color: #70c5ce;
+            background: linear-gradient(270deg, #70c5ce, #4da6ff);
+            background-size: 400% 400%;
+            animation: gradientBG 10s ease infinite;
+        }
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
         canvas {
             display: block;
-            background: url('background.png') no-repeat center center;
-            background-size: cover;
-            animation: moveBg 10s linear infinite;
-        }
-        @keyframes moveBg {
-            from { background-position: 0 0; }
-            to { background-position: -1000px 0; }
         }
     </style>
 </head>
@@ -33,7 +33,7 @@
         let birdImg = new Image();
         birdImg.src = 'bird.png';
         
-        let bird = { x: 50, y: canvas.height / 2, width: 80, height: 80, gravity: 0.15, lift: -20, velocity: 0 };
+        let bird = { x: 50, y: canvas.height / 2, width: 80, height: 80, gravity: 0.015, lift: -5, velocity: 0 };
         let pipes = [];
         let score = 0;
         let gameOver = false;
