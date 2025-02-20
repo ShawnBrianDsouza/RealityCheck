@@ -16,7 +16,7 @@
     </style>
 </head>
 <body>
-    <h1>Flappy Bird Clone</h1>
+    <h1>Ellipsoid Jumping</h1>
     <canvas id="gameCanvas" width="600" height="700"></canvas> <!-- Bigger game screen -->
 
     <script>
@@ -27,14 +27,14 @@
         const birdImg = new Image();
         birdImg.src = "bird.png"; // Replace with your extracted bird image
 
-        // Bird properties (Bigger and smoother)
+        // Bird properties (Much bigger and much slower fall)
         let bird = {
             x: 100,
             y: 250,
-            width: 70,  // Increased size
-            height: 70, // Increased size
-            gravity: 0.2, // Even lighter gravity for slower falling
-            lift: -8, // Smooth jumping
+            width: 175,  // 2.5x bigger than before
+            height: 175, // 2.5x bigger than before
+            gravity: 0.05, // 1/4 of the previous gravity (Super slow fall)
+            lift: -10, // Adjusted jump height
             velocity: 0
         };
 
@@ -44,13 +44,13 @@
 
         // Add a pipe every 100 frames
         function addPipe() {
-            let gap = 150;
-            let topHeight = Math.floor(Math.random() * 250) + 80;
+            let gap = 200; // Bigger gap for bigger bird
+            let topHeight = Math.floor(Math.random() * 250) + 100;
             pipes.push({
                 x: canvas.width,
                 top: topHeight,
                 bottom: topHeight + gap,
-                width: 90, // Wider pipes
+                width: 120, // Wider pipes for better balance
                 speed: 2.5
             });
         }
