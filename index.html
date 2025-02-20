@@ -31,25 +31,9 @@
             border-radius: 10px;
             display: none;
         }
-        #marquee {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 100px;
-            font-weight: bold;
-            color: rgba(0, 0, 0, 0.2);
-            white-space: nowrap;
-            animation: marquee 3s ease-in-out infinite alternate;
-        }
-        @keyframes marquee {
-            from { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
-            to { transform: translate(-50%, -50%) scale(1.1) rotate(5deg); }
-        }
     </style>
 </head>
 <body>
-    <div id="marquee">ABHIJEET IS A CHICK!!!!</div>
     <canvas id="canvas"></canvas>
     <div id="message">Press Space or Tap to Start</div>
     <script>
@@ -64,11 +48,6 @@
         let hitSound = new Audio('hit.mp3');
         let koughSound = new Audio('KOUGH.wav');
         let vokaySound = new Audio('Vokay.wav');
-
-        jumpSound.preload = "auto";
-        hitSound.preload = "auto";
-        koughSound.preload = "auto";
-        vokaySound.preload = "auto";
 
         let bird = { x: 100, y: canvas.height / 2, width: 120, height: 90, gravity: 0, lift: -8, velocity: 0 };
         let pipes = [];
@@ -111,10 +90,21 @@
         }
 
         function drawBird() {
-            ctx.shadowColor = "rgba(255, 255, 0, 0.7)";
-            ctx.shadowBlur = 20;
             ctx.drawImage(birdImg, bird.x, bird.y, bird.width, bird.height);
-            ctx.shadowBlur = 0;
+        }
+
+        function drawPipes() {
+            ctx.fillStyle = "green";
+            pipes.forEach(pipe => {
+                ctx.fillRect(pipe.x, 0, pipe.width, pipe.top);
+                ctx.fillRect(pipe.x, pipe.bottomY, pipe.width, pipe.bottom);
+            });
+        }
+
+        function generatePipes() {
+            let gap = 200;
+            let pipeHeight = Math.random() * (canvas.height / 2);
+            pipes.push({ x: canvas.width, width: 80, top: pipeHeight, bottomY: pipeHeight + gap, bottom: canvas.height - pipeHeight - gap, scored: false });
         }
 
         function updateGame() {
@@ -138,6 +128,8 @@
                 gameOver = true;
             }
 
+            if (frames % 100 === 0) generatePipes();
+
             pipes.forEach(pipe => {
                 pipe.x -= 3;
                 if (!pipe.scored && pipe.x + pipe.width < bird.x) {
@@ -150,6 +142,7 @@
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawBird();
+            drawPipes();
             ctx.fillStyle = "black";
             ctx.font = "30px Arial";
             ctx.fillText("Score: " + score, 20, 50);
