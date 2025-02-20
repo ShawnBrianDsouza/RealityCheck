@@ -107,7 +107,10 @@
         }
 
         function drawBird() {
+            ctx.shadowColor = "rgba(255, 255, 0, 0.7)";
+            ctx.shadowBlur = 20;
             ctx.drawImage(birdImg, bird.x, bird.y, bird.width, bird.height);
+            ctx.shadowBlur = 0;
         }
 
         function drawPipes() {
@@ -115,10 +118,13 @@
             ctx.strokeStyle = "black";
             ctx.lineWidth = 5;
             pipes.forEach(pipe => {
+                ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+                ctx.shadowBlur = 15;
                 ctx.fillRect(pipe.x, 0, pipe.width, pipe.top);
                 ctx.strokeRect(pipe.x, 0, pipe.width, pipe.top);
                 ctx.fillRect(pipe.x, pipe.bottomY, pipe.width, pipe.bottom);
                 ctx.strokeRect(pipe.x, pipe.bottomY, pipe.width, pipe.bottom);
+                ctx.shadowBlur = 0;
             });
         }
 
@@ -175,11 +181,6 @@
 
         let frames = 0;
         birdImg.onload = () => document.getElementById("message").style.display = "block";
-
-        window.addEventListener("resize", () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        });
     </script>
 </body>
 </html>
