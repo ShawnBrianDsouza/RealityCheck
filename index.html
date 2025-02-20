@@ -31,9 +31,25 @@
             border-radius: 10px;
             display: none;
         }
+        #marquee {
+            position: absolute;
+            top: 10%;
+            width: 100%;
+            font-size: 100px;
+            font-weight: bold;
+            color: rgba(0, 0, 0, 0.2);
+            white-space: nowrap;
+            overflow: hidden;
+            animation: marquee 10s linear infinite;
+        }
+        @keyframes marquee {
+            from { transform: translateX(100%); }
+            to { transform: translateX(-100%); }
+        }
     </style>
 </head>
 <body>
+    <div id="marquee">ABHIJEET IS A CHICK!!!!</div>
     <canvas id="canvas"></canvas>
     <div id="message">Press Space to Start</div>
     <script>
