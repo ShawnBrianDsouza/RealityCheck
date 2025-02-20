@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ellipsoid Jumping</title>
+    <title>Flappy Bird Clone</title>
     <style>
         body {
             text-align: center;
@@ -17,7 +17,7 @@
 </head>
 <body>
     <h1>Flappy Bird Clone</h1>
-    <canvas id="gameCanvas" width="400" height="500"></canvas>
+    <canvas id="gameCanvas" width="600" height="700"></canvas> <!-- Bigger game screen -->
 
     <script>
         const canvas = document.getElementById("gameCanvas");
@@ -27,14 +27,14 @@
         const birdImg = new Image();
         birdImg.src = "bird.png"; // Replace with your extracted bird image
 
-        // Bird properties (Updated size & gravity)
+        // Bird properties (Bigger and smoother)
         let bird = {
-            x: 50,
-            y: 150,
-            width: 50,  // Increased size
-            height: 50, // Increased size
-            gravity: 0.3, // Reduced gravity for smoother falling
-            lift: -8, // Adjusted jump height
+            x: 100,
+            y: 250,
+            width: 70,  // Increased size
+            height: 70, // Increased size
+            gravity: 0.2, // Even lighter gravity for slower falling
+            lift: -8, // Smooth jumping
             velocity: 0
         };
 
@@ -44,14 +44,14 @@
 
         // Add a pipe every 100 frames
         function addPipe() {
-            let gap = 130;
-            let topHeight = Math.floor(Math.random() * 200) + 50;
+            let gap = 150;
+            let topHeight = Math.floor(Math.random() * 250) + 80;
             pipes.push({
                 x: canvas.width,
                 top: topHeight,
                 bottom: topHeight + gap,
-                width: 70, // Increased pipe width
-                speed: 2
+                width: 90, // Wider pipes
+                speed: 2.5
             });
         }
 
@@ -62,8 +62,7 @@
 
             // Prevent falling off the screen
             if (bird.y + bird.height > canvas.height) {
-                bird.y = canvas.height - bird.height;
-                bird.velocity = 0;
+                resetGame();
             }
 
             // Move and remove pipes
@@ -76,8 +75,7 @@
                     bird.x + bird.width > pipes[i].x &&
                     (bird.y < pipes[i].top || bird.y + bird.height > pipes[i].bottom)
                 ) {
-                    alert("Game Over! Score: " + score);
-                    document.location.reload();
+                    resetGame(); // Instantly restart game
                 }
 
                 if (pipes[i].x + pipes[i].width < 0) {
@@ -109,8 +107,17 @@
 
             // Draw score
             ctx.fillStyle = "black";
-            ctx.font = "20px Arial";
-            ctx.fillText("Score: " + score, 10, 30);
+            ctx.font = "30px Arial";
+            ctx.fillText("Score: " + score, 20, 40);
+        }
+
+        function resetGame() {
+            // Instantly restart the game
+            bird.y = 250;
+            bird.velocity = 0;
+            pipes = [];
+            score = 0;
+            frame = 0;
         }
 
         function gameLoop() {
