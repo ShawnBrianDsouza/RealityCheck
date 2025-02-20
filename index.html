@@ -14,6 +14,11 @@
             display: block;
             background: url('background.png') no-repeat center center;
             background-size: cover;
+            animation: moveBg 10s linear infinite;
+        }
+        @keyframes moveBg {
+            from { background-position: 0 0; }
+            to { background-position: -1000px 0; }
         }
     </style>
 </head>
@@ -28,7 +33,7 @@
         let birdImg = new Image();
         birdImg.src = 'bird.png';
         
-        let bird = { x: 50, y: canvas.height / 2, width: 50, height: 50, gravity: 1.5, lift: -20, velocity: 0 };
+        let bird = { x: 50, y: canvas.height / 2, width: 80, height: 80, gravity: 0.15, lift: -20, velocity: 0 };
         let pipes = [];
         let score = 0;
         let gameOver = false;
@@ -58,7 +63,7 @@
             
             if (frames % 100 === 0) {
                 let pipeHeight = Math.floor(Math.random() * (canvas.height / 2));
-                pipes.push({ x: canvas.width, width: 60, top: pipeHeight, bottomY: pipeHeight + 200, bottom: canvas.height - pipeHeight - 200 });
+                pipes.push({ x: canvas.width, width: 60, top: pipeHeight, bottomY: pipeHeight + 300, bottom: canvas.height - pipeHeight - 300 });
             }
             
             pipes.forEach(pipe => {
