@@ -8,9 +8,9 @@
         body {
             margin: 0;
             overflow: hidden;
-            background: linear-gradient(270deg, #70c5ce, #4da6ff);
+            background: linear-gradient(270deg, red, green, blue, yellow);
             background-size: 400% 400%;
-            animation: gradientBG 10s ease infinite;
+            animation: gradientBG 5s ease infinite;
         }
         @keyframes gradientBG {
             0% { background-position: 0% 50%; }
@@ -33,7 +33,7 @@
         let birdImg = new Image();
         birdImg.src = 'bird.png';
         
-        let bird = { x: 50, y: canvas.height / 2, width: 80, height: 80, gravity: 0.015, lift: -5, velocity: 0 };
+        let bird = { x: 50, y: canvas.height / 2, width: 100, height: 100, gravity: 0.0015, lift: -3, velocity: 0 };
         let pipes = [];
         let score = 0;
         let gameOver = false;
@@ -45,10 +45,14 @@
         }
         
         function drawPipes() {
-            ctx.fillStyle = "green";
+            ctx.fillStyle = "white";
+            ctx.strokeStyle = "black";
+            ctx.lineWidth = 5;
             pipes.forEach(pipe => {
                 ctx.fillRect(pipe.x, 0, pipe.width, pipe.top);
+                ctx.strokeRect(pipe.x, 0, pipe.width, pipe.top);
                 ctx.fillRect(pipe.x, pipe.bottomY, pipe.width, pipe.bottom);
+                ctx.strokeRect(pipe.x, pipe.bottomY, pipe.width, pipe.bottom);
             });
         }
         
@@ -63,7 +67,7 @@
             
             if (frames % 100 === 0) {
                 let pipeHeight = Math.floor(Math.random() * (canvas.height / 2));
-                pipes.push({ x: canvas.width, width: 60, top: pipeHeight, bottomY: pipeHeight + 300, bottom: canvas.height - pipeHeight - 300 });
+                pipes.push({ x: canvas.width, width: 80, top: pipeHeight, bottomY: pipeHeight + 350, bottom: canvas.height - pipeHeight - 350 });
             }
             
             pipes.forEach(pipe => {
