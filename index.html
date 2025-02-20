@@ -3,118 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Year Selection</title>
+    <title>Flappy Bird Clone</title>
     <style>
         body {
-            font-family: 'Poppins', sans-serif;
-            margin: 0;
-            padding: 0;
-            background: #1e1e2e;
-            color: white;
-            overflow-x: hidden;
-        }
-        .container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            height: 100vh;
-            background: linear-gradient(135deg, #ff9a9e, #fad0c4);
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.2);
-            max-width: 900px;
-            margin: auto;
-        }
-        h2 {
-            font-size: 28px;
-            text-transform: uppercase;
-        }
-        p {
-            font-size: 18px;
-        }
-        input {
-            padding: 12px;
-            width: 60%;
-            margin-top: 10px;
-            border: none;
-            border-radius: 8px;
-            font-size: 18px;
             text-align: center;
-            background: rgba(255, 255, 255, 0.8);
-            color: #333;
+            background-color: skyblue;
         }
-        button {
-            margin-top: 15px;
-            padding: 12px 30px;
-            border: none;
-            background: #ff758c;
-            color: white;
-            font-size: 18px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: 0.3s;
-            box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.2);
-        }
-        button:hover {
-            background: #ff506e;
-        }
-        #output {
-            margin-top: 20px;
-            font-size: 20px;
-            font-weight: bold;
-            color: #333;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 15px;
-            border-radius: 10px;
-            width: 80%;
-            text-align: center;
-        }
-        .design {
-            position: absolute;
-            width: 200px;
-            height: 200px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            top: 10%;
-            left: 15%;
-        }
-        .design2 {
-            position: absolute;
-            width: 150px;
-            height: 150px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            bottom: 10%;
-            right: 15%;
+        canvas {
+            border: 2px solid black;
+            background-color: lightblue;
         }
     </style>
 </head>
 <body>
-    <div class="design"></div>
-    <div class="design2"></div>
-    <div class="container">
-        <h2>Select Your Year</h2>
-        <p>Type 13 if you are in 1st year</p>
-        <p>Type 14 if you are in 2nd year</p>
-        <p>Type 15 if you are in 3rd year</p>
-        <p>Type 16 if you are in 4th year</p>
-        <input type="number" id="classInput" placeholder="Enter your year code">
-        <br>
-        <button onclick="checkMeaning()">Submit</button>
-        <p id="output"></p>
-    </div>
+    <h1>Flappy Bird Clone</h1>
+    <canvas id="gameCanvas" width="400" height="500"></canvas>
 
     <script>
-        function checkMeaning() {
-            let cls = document.getElementById("classInput").value;
-            let output = document.getElementById("output");
-            if (cls < 12) {
-                output.innerText = "Meaning of 'no Doubts': All doubts cleared logically";
-            } else {
-                output.innerText = "Meaning of 'no Doubts': Solving method understood without logic";
-            }
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        // Load bird image
+        const birdImg = new Image();
+        birdImg.src = "bird.png"; // Replace with your extracted bird image
+
+        // Bird properties
+        let bird = {
+            x: 50,
+            y: 150,
+            width: 30,
+            height: 30,
+            gravity: 0.6,
+            lift: -10,
+            velocity: 0
+        };
+
+        let pipes = [];
+        let frame = 0;
+        let score = 0;
+
+        // Add a pipe every 100 frames
+        function addPipe() {
+            let gap = 120;
+            let topHeight = Math.floor(Math.random() * 200) + 50;
+            pipes.push({
+                x: canvas.width,
+                top: topHeight,
+                bottom: topHeight + gap,
+                width: 50,
+                speed: 2
+            });
         }
+
+        function update() {
+            // Apply gravity
+            bird.velocity += bird.gravity;
+            bird.y += bird.velocity;
+
+            // Prevent falling off the screen
+            if (bird.y + bird.height > canvas.height) {
+                bird.y = canvas.height - bird.height;
+                bird.velocity = 0;
+            }
+
+            // Move and remove pipes
+            for (let i = 0; i < pipes.length; i++) {
+                pipes[i].x -= pipes[i].speed;
+
+                // Collision detection
+                if (
+                    bird.x < pipes[i].x + pipes[i].width &&
+                    bird.x + bird.width > pipes[i].x &&
+                    (bird.y < pipes[i].top || bird.y + bird.height > pipes[i].bottom)
+                ) {
+                    alert("Game Over! Score: " + score);
+                    document.location.reload();
+                }
+
+                if (pipes[i].x + pipes[i].width < 0) {
+                    pipes.splice(i, 1);
+                    score++;
+                }
+            }
+
+            // Add new pipes
+            if (frame % 100 === 0) {
+                addPipe();
+            }
+
+            frame++;
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw bird
+            ctx.drawImage(birdImg, bird.x, bird.y, bird.width, bird.height);
+
+            // Draw pipes
+            for (let i = 0; i < pipes.length; i++) {
+                ctx.fillStyle = "green";
+                ctx.fillRect(pipes[i].x, 0, pipes[i].width, pipes[i].top);
+                ctx.fillRect(pipes[i].x, pipes[i].bottom, pipes[i].width, canvas.height - pipes[i].bottom);
+            }
+
+            // Draw score
+            ctx.fillStyle = "black";
+            ctx.font = "20px Arial";
+            ctx.fillText("Score: " + score, 10, 30);
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        document.addEventListener("keydown", () => {
+            bird.velocity = bird.lift; // Makes the bird jump
+        });
+
+        gameLoop();
     </script>
 </body>
 </html>
