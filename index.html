@@ -33,12 +33,18 @@
         let birdImg = new Image();
         birdImg.src = 'bird.png';
         
-        let bird = { x: 50, y: canvas.height / 2, width: 100, height: 100, gravity: 0.0015, lift: -3, velocity: 0 };
+        let bird = { x: 50, y: canvas.height / 2, width: 100, height: 100, gravity: 5, lift: -15, velocity: 0, jumping: false };
         let pipes = [];
         let score = 0;
         let gameOver = false;
         
-        document.addEventListener("keydown", () => bird.velocity = bird.lift);
+        document.addEventListener("keydown", (event) => {
+            if (event.code === "Space" && !bird.jumping) {
+                bird.jumping = true;
+                bird.velocity = bird.lift;
+                setTimeout(() => bird.jumping = false, 500);
+            }
+        });
         
         function drawBird() {
             ctx.drawImage(birdImg, bird.x, bird.y, bird.width, bird.height);
