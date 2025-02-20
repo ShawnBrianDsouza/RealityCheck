@@ -6,27 +6,29 @@
     <title>Flappy Bird</title>
     <style>
         body {
-            text-align: center;
+            margin: 0;
+            overflow: hidden;
             background-color: #70c5ce;
         }
         canvas {
             display: block;
-            margin: auto;
-            background: url('https://i.imgur.com/rfTh8Zd.png');
+            background: url('background.png') no-repeat center center;
+            background-size: cover;
         }
     </style>
 </head>
 <body>
-    <h1>Flappy Bird</h1>
-    <canvas id="canvas" width="320" height="480"></canvas>
+    <canvas id="canvas"></canvas>
     <script>
         let canvas = document.getElementById("canvas");
         let ctx = canvas.getContext("2d");
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
         
         let birdImg = new Image();
         birdImg.src = 'bird.png';
         
-        let bird = { x: 50, y: 150, width: 30, height: 30, gravity: 1.5, lift: -20, velocity: 0 };
+        let bird = { x: 50, y: canvas.height / 2, width: 50, height: 50, gravity: 1.5, lift: -20, velocity: 0 };
         let pipes = [];
         let score = 0;
         let gameOver = false;
@@ -55,12 +57,12 @@
             }
             
             if (frames % 100 === 0) {
-                let pipeHeight = Math.floor(Math.random() * 150) + 50;
-                pipes.push({ x: canvas.width, width: 40, top: pipeHeight, bottomY: pipeHeight + 100, bottom: canvas.height - pipeHeight - 100 });
+                let pipeHeight = Math.floor(Math.random() * (canvas.height / 2));
+                pipes.push({ x: canvas.width, width: 60, top: pipeHeight, bottomY: pipeHeight + 200, bottom: canvas.height - pipeHeight - 200 });
             }
             
             pipes.forEach(pipe => {
-                pipe.x -= 2;
+                pipe.x -= 3;
                 if (pipe.x + pipe.width < 0) pipes.shift();
                 if (bird.x < pipe.x + pipe.width && bird.x + bird.width > pipe.x && (bird.y < pipe.top || bird.y + bird.height > pipe.bottomY)) {
                     gameOver = true;
@@ -72,7 +74,8 @@
             drawBird();
             drawPipes();
             ctx.fillStyle = "black";
-            ctx.fillText("Score: " + score, 10, 20);
+            ctx.font = "30px Arial";
+            ctx.fillText("Score: " + score, 20, 50);
             
             frames++;
             requestAnimationFrame(updateGame);
@@ -80,6 +83,11 @@
         
         let frames = 0;
         birdImg.onload = () => updateGame();
+        
+        window.addEventListener("resize", () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
     </script>
 </body>
 </html>
