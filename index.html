@@ -50,6 +50,7 @@
         let bird = { x: 100, y: canvas.height / 2, width: 120, height: 90, gravity: 0.3, lift: -6, velocity: 0 };
         let pipes = [];
         let score = 0;
+        let highScore = 0;
         let gameOver = false;
         let gameStarted = false;
 
@@ -57,7 +58,9 @@
             if (event.code === "Space") {
                 if (!gameStarted) {
                     startGame();
-                } else if (!gameOver) {
+                } else if (gameOver) {
+                    startGame();
+                } else {
                     bird.velocity = bird.lift;
                     jumpSound.play();
                 }
@@ -72,6 +75,9 @@
         }
 
         function resetGame() {
+            if (score > highScore) {
+                highScore = score;
+            }
             bird.y = canvas.height / 2;
             bird.velocity = 0;
             pipes = [];
@@ -136,6 +142,7 @@
             ctx.fillStyle = "black";
             ctx.font = "30px Arial";
             ctx.fillText("Score: " + score, 20, 50);
+            ctx.fillText("High Score: " + highScore, 20, 90);
 
             frames++;
             requestAnimationFrame(updateGame);
