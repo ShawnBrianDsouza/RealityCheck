@@ -1,1 +1,43 @@
-print("Fuck U")
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOL Full Screen</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            background: linear-gradient(45deg, red, yellow, blue, purple);
+            background-size: 400% 400%;
+            animation: bgAnimation 6s infinite alternate;
+            overflow: hidden;
+        }
+
+        @keyframes bgAnimation {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 100% 100%; }
+        }
+
+        h1 {
+            font-size: 20vw; /* Automatically scales with screen size */
+            font-weight: bold;
+            color: white;
+            text-shadow: 10px 10px 20px rgba(0, 0, 0, 0.5);
+            user-select: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Fuck You</h1>
+</body>
+</html>
