@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flappy Bird Clone</title>
+    <title>Ellipsoid Jumping</title>
     <style>
         body {
             text-align: center;
@@ -27,14 +27,14 @@
         const birdImg = new Image();
         birdImg.src = "bird.png"; // Replace with your extracted bird image
 
-        // Bird properties
+        // Bird properties (Updated size & gravity)
         let bird = {
             x: 50,
             y: 150,
-            width: 30,
-            height: 30,
-            gravity: 0.6,
-            lift: -10,
+            width: 50,  // Increased size
+            height: 50, // Increased size
+            gravity: 0.3, // Reduced gravity for smoother falling
+            lift: -8, // Adjusted jump height
             velocity: 0
         };
 
@@ -44,13 +44,13 @@
 
         // Add a pipe every 100 frames
         function addPipe() {
-            let gap = 120;
+            let gap = 130;
             let topHeight = Math.floor(Math.random() * 200) + 50;
             pipes.push({
                 x: canvas.width,
                 top: topHeight,
                 bottom: topHeight + gap,
-                width: 50,
+                width: 70, // Increased pipe width
                 speed: 2
             });
         }
