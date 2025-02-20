@@ -58,18 +58,25 @@
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        let playerName = "Player";
+        let playerName = "";
         let leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
         
         function saveName() {
             let nameInput = document.getElementById("playerName").value.trim();
-            if (nameInput) playerName = nameInput;
-            document.getElementById("namePrompt").style.display = "none";
-            document.getElementById("message").style.display = "block";
+            if (nameInput && !leaderboard.some(entry => entry.name === nameInput)) {
+                playerName = nameInput;
+                document.getElementById("namePrompt").style.display = "none";
+                document.getElementById("message").style.display = "block";
+            }
         }
 
         function updateLeaderboard() {
-            leaderboard.push({ name: playerName, score: score });
+            let existingEntry = leaderboard.find(entry => entry.name === playerName);
+            if (existingEntry) {
+                if (score > existingEntry.score) existingEntry.score = score;
+            } else {
+                leaderboard.push({ name: playerName, score: score });
+            }
             leaderboard.sort((a, b) => b.score - a.score);
             leaderboard = leaderboard.slice(0, 5);
             localStorage.setItem("leaderboard", JSON.stringify(leaderboard));
