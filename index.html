@@ -23,8 +23,8 @@
         let canvas = document.getElementById("canvas");
         let ctx = canvas.getContext("2d");
         
-       birdImg.src = 'bird.png';
-
+        let birdImg = new Image();
+        birdImg.src = 'bird.png';
         
         let bird = { x: 50, y: 150, width: 30, height: 30, gravity: 1.5, lift: -20, velocity: 0 };
         let pipes = [];
@@ -79,7 +79,7 @@
         }
         
         let frames = 0;
-        updateGame();
+        birdImg.onload = () => updateGame();
     </script>
 </body>
 </html>
