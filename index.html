@@ -13,6 +13,7 @@
             animation: gradientBG 5s ease infinite;
             font-family: Arial, sans-serif;
             text-align: center;
+            position: relative;
         }
         @keyframes gradientBG {
             0% { background-position: 0% 50%; }
@@ -33,18 +34,18 @@
         }
         #marquee {
             position: absolute;
-            top: 10%;
-            width: 100%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             font-size: 100px;
             font-weight: bold;
             color: rgba(0, 0, 0, 0.2);
             white-space: nowrap;
-            overflow: hidden;
-            animation: marquee 10s linear infinite;
+            animation: marquee 5s linear infinite alternate;
         }
         @keyframes marquee {
-            from { transform: translateX(100%); }
-            to { transform: translateX(-100%); }
+            from { transform: translate(-50%, -50%) scale(1); }
+            to { transform: translate(-50%, -50%) scale(1.1); }
         }
     </style>
 </head>
@@ -63,12 +64,13 @@
         let jumpSound = new Audio('jump.mp3');
         let hitSound = new Audio('hit.mp3');
 
-        let bird = { x: 100, y: canvas.height / 2, width: 120, height: 90, gravity: 0.3, lift: -6, velocity: 0 };
+        let bird = { x: 100, y: canvas.height / 2, width: 120, height: 90, gravity: 0, lift: -6, velocity: 0 };
         let pipes = [];
         let score = 0;
         let highScore = 0;
         let gameOver = false;
         let gameStarted = false;
+        let gravityIncreaseTime = 0;
 
         document.addEventListener("keydown", (event) => {
             if (event.code === "Space") {
@@ -96,10 +98,12 @@
             }
             bird.y = canvas.height / 2;
             bird.velocity = 0;
+            bird.gravity = 0;
             pipes = [];
             score = 0;
             gameOver = false;
             frames = 0;
+            gravityIncreaseTime = 0;
         }
 
         function drawBird() {
@@ -124,6 +128,11 @@
                 document.getElementById("message").style.display = "block";
                 return;
             }
+
+            if (gravityIncreaseTime < 300) {
+                bird.gravity = (gravityIncreaseTime / 300) * 0.3;
+                gravityIncreaseTime++;
+            }
             
             bird.velocity += bird.gravity;
             bird.y += bird.velocity;
@@ -133,7 +142,7 @@
                 gameOver = true;
             }
 
-            if (frames % 100 === 0) {
+            if (frames >= 300 && frames % 100 === 0) {
                 let gap = 300 + Math.random() * 75;
                 let pipeHeight = Math.random() * (canvas.height / 2);
                 pipes.push({ x: canvas.width, width: 80, top: pipeHeight, bottomY: pipeHeight + gap, bottom: canvas.height - pipeHeight - gap, scored: false });
