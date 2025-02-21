@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flappy Bird 3D</title>
+    <title>Flappy Bird</title>
     <style>
         body {
             margin: 0;
             overflow: hidden;
-            background: linear-gradient(270deg, #87CEEB, #1E90FF);
+            background: linear-gradient(270deg, red, green, blue, yellow);
             background-size: 400% 400%;
-            animation: gradientBG 10s ease infinite;
+            animation: gradientBG 5s ease infinite;
             font-family: Arial, sans-serif;
             text-align: center;
         }
@@ -20,7 +20,7 @@
             100% { background-position: 0% 50%; }
         }
         canvas { display: block; }
-        #message, #namePrompt {
+        #message {
             position: absolute;
             top: 50%;
             left: 50%;
@@ -29,62 +29,18 @@
             background: rgba(255, 255, 255, 0.8);
             padding: 20px;
             border-radius: 10px;
-        }
-        #namePrompt { display: block; }
-        #leaderboard {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            background: rgba(0, 0, 0, 0.5);
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            text-align: left;
+            display: none;
         }
     </style>
 </head>
 <body>
     <canvas id="canvas"></canvas>
     <div id="message">Press Space or Tap to Start</div>
-    <div id="namePrompt">
-        <label for="playerName">Enter Your Name:</label>
-        <input type="text" id="playerName">
-        <button onclick="saveName()">Start</button>
-    </div>
-    <div id="leaderboard"></div>
     <script>
         let canvas = document.getElementById("canvas");
         let ctx = canvas.getContext("2d");
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-
-        let playerName = "";
-        let leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
-        
-        function saveName() {
-            let nameInput = document.getElementById("playerName").value.trim();
-            if (nameInput && !leaderboard.some(entry => entry.name === nameInput)) {
-                playerName = nameInput;
-                document.getElementById("namePrompt").style.display = "none";
-                document.getElementById("message").style.display = "block";
-            }
-        }
-
-        function updateLeaderboard() {
-            let existingEntry = leaderboard.find(entry => entry.name === playerName);
-            if (existingEntry) {
-                if (score > existingEntry.score) existingEntry.score = score;
-            } else {
-                leaderboard.push({ name: playerName, score: score });
-            }
-            leaderboard.sort((a, b) => b.score - a.score);
-            leaderboard = leaderboard.slice(0, 5);
-            localStorage.setItem("leaderboard", JSON.stringify(leaderboard));
-
-            let leaderboardDiv = document.getElementById("leaderboard");
-            leaderboardDiv.innerHTML = "<strong>Top 5 Players</strong><br>" +
-                leaderboard.map(entry => `${entry.name}: ${entry.score}`).join("<br>");
-        }
 
         let birdImg = new Image();
         birdImg.src = 'bird.png';
@@ -96,10 +52,11 @@
         let bird = { x: 100, y: canvas.height / 2, width: 120, height: 90, gravity: 0, lift: -8, velocity: 0 };
         let pipes = [];
         let score = 0;
-        let highScore = localStorage.getItem("highScore") || 0;
+        let highScore = 0;
         let gameOver = false;
         let gameStarted = false;
         let frames = 0;
+        let gravityIncreaseTime = 0;
 
         document.addEventListener("keydown", (event) => { if (event.code === "Space") handleJump(); });
         document.addEventListener("touchstart", handleJump);
@@ -121,11 +78,7 @@
         }
 
         function resetGame() {
-            if (score > highScore) {
-                highScore = score;
-                localStorage.setItem("highScore", highScore);
-            }
-            updateLeaderboard();
+            if (score > highScore) highScore = score;
             bird.y = canvas.height / 2;
             bird.velocity = 0;
             bird.gravity = 0;
@@ -133,6 +86,25 @@
             score = 0;
             gameOver = false;
             frames = 0;
+            gravityIncreaseTime = 0;
+        }
+
+        function drawBird() {
+            ctx.drawImage(birdImg, bird.x, bird.y, bird.width, bird.height);
+        }
+
+        function drawPipes() {
+            ctx.fillStyle = "green";
+            pipes.forEach(pipe => {
+                ctx.fillRect(pipe.x, 0, pipe.width, pipe.top);
+                ctx.fillRect(pipe.x, pipe.bottomY, pipe.width, pipe.bottom);
+            });
+        }
+
+        function generatePipes() {
+            let gap = 200;
+            let pipeHeight = Math.random() * (canvas.height / 2);
+            pipes.push({ x: canvas.width, width: 80, top: pipeHeight, bottomY: pipeHeight + gap, bottom: canvas.height - pipeHeight - gap, scored: false });
         }
 
         function updateGame() {
@@ -143,7 +115,11 @@
                 return;
             }
 
-            bird.gravity = 0.4;
+            if (gravityIncreaseTime < 300) {
+                bird.gravity = (gravityIncreaseTime / 300) * 0.4;
+                gravityIncreaseTime++;
+            }
+            
             bird.velocity += bird.gravity;
             bird.y += bird.velocity;
 
@@ -152,7 +128,21 @@
                 gameOver = true;
             }
 
+            if (frames % 100 === 0) generatePipes();
+
+            pipes.forEach(pipe => {
+                pipe.x -= 3;
+                if (!pipe.scored && pipe.x + pipe.width < bird.x) {
+                    score++;
+                    pipe.scored = true;
+                    if (score % 5 === 0) vokaySound.play();
+                }
+            });
+            pipes = pipes.filter(pipe => pipe.x + pipe.width > 0);
+
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawBird();
+            drawPipes();
             ctx.fillStyle = "black";
             ctx.font = "30px Arial";
             ctx.fillText("Score: " + score, 20, 50);
@@ -162,7 +152,7 @@
             requestAnimationFrame(updateGame);
         }
 
-        birdImg.onload = () => document.getElementById("namePrompt").style.display = "block";
+        birdImg.onload = () => document.getElementById("message").style.display = "block";
     </script>
 </body>
 </html>
