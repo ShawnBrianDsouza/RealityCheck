@@ -83,7 +83,7 @@
 
             let leaderboardDiv = document.getElementById("leaderboard");
             leaderboardDiv.innerHTML = "<strong>Top 5 Players</strong><br>" +
-                leaderboard.map(entry => ${entry.name}: ${entry.score}).join("<br>");
+                leaderboard.map(entry => `${entry.name}: ${entry.score}`).join("<br>");
         }
 
         let birdImg = new Image();
