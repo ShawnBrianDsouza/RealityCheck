@@ -20,22 +20,24 @@
             100% { background-position: 0% 50%; }
         }
         canvas { display: block; }
-        #message {
+        #message, #muteButton {
             position: absolute;
-            top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 30px;
+            transform: translateX(-50%);
+            font-size: 24px;
             background: rgba(255, 255, 255, 0.8);
-            padding: 20px;
+            padding: 15px;
             border-radius: 10px;
-            display: none;
         }
+        #message { top: 50%; display: none; }
+        #muteButton { bottom: 20px; cursor: pointer; }
     </style>
 </head>
 <body>
     <canvas id="canvas"></canvas>
     <div id="message">Press Space or Tap to Start</div>
+    <button id="muteButton">Mute</button>
+    
     <script>
         let canvas = document.getElementById("canvas");
         let ctx = canvas.getContext("2d");
@@ -48,25 +50,27 @@
         let hitSound = new Audio('hit.mp3');
         let koughSound = new Audio('KOUGH.wav');
         let vokaySound = new Audio('Vokay.wav');
+        let isMuted = false;
 
-        let bird = { x: 100, y: canvas.height / 2, width: 120, height: 90, gravity: 0, lift: -8, velocity: 0 };
+        let bird = { x: 100, y: canvas.height / 2, width: 50, height: 40, gravity: 0.2, lift: -8, velocity: 0, angle: 0 };
         let pipes = [];
         let score = 0;
-        let highScore = 0;
+        let highScore = localStorage.getItem("highScore") || 0;
         let gameOver = false;
         let gameStarted = false;
         let frames = 0;
-        let gravityIncreaseTime = 0;
+        let speed = 3;
 
         document.addEventListener("keydown", (event) => { if (event.code === "Space") handleJump(); });
         document.addEventListener("touchstart", handleJump);
+        document.getElementById("muteButton").addEventListener("click", () => { isMuted = !isMuted; });
 
         function handleJump() {
             if (!gameStarted) startGame();
             else if (gameOver) startGame();
             else {
                 bird.velocity = bird.lift;
-                jumpSound.play();
+                if (!isMuted) jumpSound.play();
             }
         }
 
@@ -78,19 +82,25 @@
         }
 
         function resetGame() {
-            if (score > highScore) highScore = score;
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem("highScore", highScore);
+            }
             bird.y = canvas.height / 2;
             bird.velocity = 0;
-            bird.gravity = 0;
             pipes = [];
             score = 0;
             gameOver = false;
             frames = 0;
-            gravityIncreaseTime = 0;
+            speed = 3;
         }
 
         function drawBird() {
-            ctx.drawImage(birdImg, bird.x, bird.y, bird.width, bird.height);
+            ctx.save();
+            ctx.translate(bird.x + bird.width / 2, bird.y + bird.height / 2);
+            ctx.rotate(bird.angle * Math.PI / 180);
+            ctx.drawImage(birdImg, -bird.width / 2, -bird.height / 2, bird.width, bird.height);
+            ctx.restore();
         }
 
         function drawPipes() {
@@ -102,43 +112,49 @@
         }
 
         function generatePipes() {
-            let gap = 200;
+            let gap = 150;
             let pipeHeight = Math.random() * (canvas.height / 2);
             pipes.push({ x: canvas.width, width: 80, top: pipeHeight, bottomY: pipeHeight + gap, bottom: canvas.height - pipeHeight - gap, scored: false });
         }
 
         function updateGame() {
             if (gameOver) {
-                koughSound.play();
+                if (!isMuted) koughSound.play();
                 document.getElementById("message").textContent = "Game Over! Press Space or Tap to Restart";
                 document.getElementById("message").style.display = "block";
                 return;
             }
-
-            if (gravityIncreaseTime < 300) {
-                bird.gravity = (gravityIncreaseTime / 300) * 0.4;
-                gravityIncreaseTime++;
-            }
             
             bird.velocity += bird.gravity;
             bird.y += bird.velocity;
+            bird.angle = Math.min(30, bird.velocity * 5);
 
             if (bird.y + bird.height >= canvas.height || bird.y <= 0) {
-                hitSound.play();
+                if (!isMuted) hitSound.play();
                 gameOver = true;
             }
 
             if (frames % 100 === 0) generatePipes();
-
             pipes.forEach(pipe => {
-                pipe.x -= 3;
+                pipe.x -= speed;
                 if (!pipe.scored && pipe.x + pipe.width < bird.x) {
                     score++;
                     pipe.scored = true;
-                    if (score % 5 === 0) vokaySound.play();
+                    if (score % 5 === 0 && !isMuted) vokaySound.play();
                 }
             });
             pipes = pipes.filter(pipe => pipe.x + pipe.width > 0);
+            speed += 0.001; 
+            
+            pipes.forEach(pipe => {
+                if (
+                    bird.x + bird.width > pipe.x && bird.x < pipe.x + pipe.width && 
+                    (bird.y < pipe.top || bird.y + bird.height > pipe.bottomY)
+                ) {
+                    if (!isMuted) hitSound.play();
+                    gameOver = true;
+                }
+            });
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawBird();
@@ -151,7 +167,6 @@
             frames++;
             requestAnimationFrame(updateGame);
         }
-
         birdImg.onload = () => document.getElementById("message").style.display = "block";
     </script>
 </body>
