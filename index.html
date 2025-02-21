@@ -52,7 +52,7 @@
         let vokaySound = new Audio('Vokay.wav');
         let isMuted = false;
 
-        let bird = { x: 100, y: canvas.height / 2, width: 50, height: 40, gravity: 0.2, lift: -8, velocity: 0, angle: 0 };
+        let bird = { x: 100, y: canvas.height / 2, width: 50, height: 40, gravity: 0.3, lift: -6, velocity: 0, angle: 0 };
         let pipes = [];
         let score = 0;
         let highScore = localStorage.getItem("highScore") || 0;
@@ -144,7 +144,7 @@
                 }
             });
             pipes = pipes.filter(pipe => pipe.x + pipe.width > 0);
-            speed += 0.001; 
+            speed += 0.002; 
             
             pipes.forEach(pipe => {
                 if (
