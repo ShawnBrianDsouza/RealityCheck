@@ -52,14 +52,14 @@
         let vokaySound = new Audio('Vokay.wav');
         let isMuted = false;
 
-        let bird = { x: 100, y: canvas.height / 2, width: 50, height: 40, gravity: 0.3, lift: -6, velocity: 0, angle: 0 };
+        let bird = { x: 100, y: canvas.height / 2, width: 50, height: 40, gravity: 0.25, lift: -5, velocity: 0, angle: 0 };
         let pipes = [];
         let score = 0;
         let highScore = localStorage.getItem("highScore") || 0;
         let gameOver = false;
         let gameStarted = false;
         let frames = 0;
-        let speed = 3;
+        let speed = 2;
 
         document.addEventListener("keydown", (event) => { if (event.code === "Space") handleJump(); });
         document.addEventListener("touchstart", handleJump);
@@ -92,7 +92,7 @@
             score = 0;
             gameOver = false;
             frames = 0;
-            speed = 3;
+            speed = 2;
         }
 
         function drawBird() {
@@ -112,7 +112,7 @@
         }
 
         function generatePipes() {
-            let gap = 150;
+            let gap = 160;
             let pipeHeight = Math.random() * (canvas.height / 2);
             pipes.push({ x: canvas.width, width: 80, top: pipeHeight, bottomY: pipeHeight + gap, bottom: canvas.height - pipeHeight - gap, scored: false });
         }
@@ -134,7 +134,7 @@
                 gameOver = true;
             }
 
-            if (frames % 100 === 0) generatePipes();
+            if (frames % 120 === 0) generatePipes();
             pipes.forEach(pipe => {
                 pipe.x -= speed;
                 if (!pipe.scored && pipe.x + pipe.width < bird.x) {
@@ -144,7 +144,7 @@
                 }
             });
             pipes = pipes.filter(pipe => pipe.x + pipe.width > 0);
-            speed += 0.002; 
+            speed += 0.001; 
             
             pipes.forEach(pipe => {
                 if (
