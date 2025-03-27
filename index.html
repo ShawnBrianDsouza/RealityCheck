@@ -3,171 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flappy Bird</title>
-    <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-            background: linear-gradient(270deg, red, green, blue, yellow);
-            background-size: 400% 400%;
-            animation: gradientBG 5s ease infinite;
-            font-family: Arial, sans-serif;
-            text-align: center;
-        }
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        canvas { display: block; }
-        #message, #muteButton {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 24px;
-            background: rgba(255, 255, 255, 0.8);
-            padding: 15px;
-            border-radius: 10px;
-        }
-        #message { top: 50%; display: none; }
-        #muteButton { bottom: 20px; cursor: pointer; }
-    </style>
+    <title>Run Python in Browser</title>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
 </head>
 <body>
-    <canvas id="canvas"></canvas>
-    <div id="message">Press Space or Tap to Start</div>
-    <button id="muteButton">Mute</button>
-    
+    <h2>Enter Your Registration Number</h2>
+    <input type="number" id="regNumber" placeholder="Enter number">
+    <button onclick="runPython()">Run Python</button>
+    <p id="output"></p>
+
     <script>
-        let canvas = document.getElementById("canvas");
-        let ctx = canvas.getContext("2d");
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-
-        let birdImg = new Image();
-        birdImg.src = 'bird.png';
-        let jumpSound = new Audio('jump.mp3');
-        let hitSound = new Audio('hit.mp3');
-        let koughSound = new Audio('KOUGH.wav');
-        let vokaySound = new Audio('Vokay.wav');
-        let isMuted = false;
-
-        let bird = { x: 100, y: canvas.height / 2, width: 50, height: 40, gravity: 0.25, lift: -5, velocity: 0, angle: 0 };
-        let pipes = [];
-        let score = 0;
-        let highScore = localStorage.getItem("highScore") || 0;
-        let gameOver = false;
-        let gameStarted = false;
-        let frames = 0;
-        let speed = 2;
-
-        document.addEventListener("keydown", (event) => { if (event.code === "Space") handleJump(); });
-        document.addEventListener("touchstart", handleJump);
-        document.getElementById("muteButton").addEventListener("click", () => { isMuted = !isMuted; });
-
-        function handleJump() {
-            if (!gameStarted) startGame();
-            else if (gameOver) startGame();
-            else {
-                bird.velocity = bird.lift;
-                if (!isMuted) jumpSound.play();
-            }
+        async function loadPyodideAndRun() {
+            window.pyodide = await loadPyodide();
         }
+        loadPyodideAndRun();
 
-        function startGame() {
-            gameStarted = true;
-            document.getElementById("message").style.display = "none";
-            resetGame();
-            updateGame();
-        }
-
-        function resetGame() {
-            if (score > highScore) {
-                highScore = score;
-                localStorage.setItem("highScore", highScore);
-            }
-            bird.y = canvas.height / 2;
-            bird.velocity = 0;
-            pipes = [];
-            score = 0;
-            gameOver = false;
-            frames = 0;
-            speed = 2;
-        }
-
-        function drawBird() {
-            ctx.save();
-            ctx.translate(bird.x + bird.width / 2, bird.y + bird.height / 2);
-            ctx.rotate(bird.angle * Math.PI / 180);
-            ctx.drawImage(birdImg, -bird.width / 2, -bird.height / 2, bird.width, bird.height);
-            ctx.restore();
-        }
-
-        function drawPipes() {
-            ctx.fillStyle = "green";
-            pipes.forEach(pipe => {
-                ctx.fillRect(pipe.x, 0, pipe.width, pipe.top);
-                ctx.fillRect(pipe.x, pipe.bottomY, pipe.width, pipe.bottom);
-            });
-        }
-
-        function generatePipes() {
-            let gap = 160;
-            let pipeHeight = Math.random() * (canvas.height / 2);
-            pipes.push({ x: canvas.width, width: 80, top: pipeHeight, bottomY: pipeHeight + gap, bottom: canvas.height - pipeHeight - gap, scored: false });
-        }
-
-        function updateGame() {
-            if (gameOver) {
-                if (!isMuted) koughSound.play();
-                document.getElementById("message").textContent = "Game Over! Press Space or Tap to Restart";
-                document.getElementById("message").style.display = "block";
+        async function runPython() {
+            let inputVal = document.getElementById("regNumber").value;
+            if (!inputVal) {
+                document.getElementById("output").innerText = "Please enter a number.";
                 return;
             }
-            
-            bird.velocity += bird.gravity;
-            bird.y += bird.velocity;
-            bird.angle = Math.min(30, bird.velocity * 5);
 
-            if (bird.y + bird.height >= canvas.height || bird.y <= 0) {
-                if (!isMuted) hitSound.play();
-                gameOver = true;
-            }
+            let pythonCode = `
+from fractions import Fraction
 
-            if (frames % 120 === 0) generatePipes();
-            pipes.forEach(pipe => {
-                pipe.x -= speed;
-                if (!pipe.scored && pipe.x + pipe.width < bird.x) {
-                    score++;
-                    pipe.scored = true;
-                    if (score % 5 === 0 && !isMuted) vokaySound.play();
-                }
-            });
-            pipes = pipes.filter(pipe => pipe.x + pipe.width > 0);
-            speed += 0.001; 
-            
-            pipes.forEach(pipe => {
-                if (
-                    bird.x + bird.width > pipe.x && bird.x < pipe.x + pipe.width && 
-                    (bird.y < pipe.top || bird.y + bird.height > pipe.bottomY)
-                ) {
-                    if (!isMuted) hitSound.play();
-                    gameOver = true;
-                }
-            });
+x = int(${inputVal})  # Taking input from JavaScript
+a = x % 10
+b = (x % 100 - a) // 10
 
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawBird();
-            drawPipes();
-            ctx.fillStyle = "black";
-            ctx.font = "30px Arial";
-            ctx.fillText("Score: " + score, 20, 50);
-            ctx.fillText("High Score: " + highScore, 20, 90);
+if b == -1:
+    result = "Invalid input: results in division by zero"
+else:
+    val = 3 * (a + 1) / (b + 1)
+    x = 1 / val
+    fraction_x = Fraction(x).limit_denominator()
+    result = "x < " + str(fraction_x)
 
-            frames++;
-            requestAnimationFrame(updateGame);
+result  # Return result
+`;
+
+            let output = await pyodide.runPythonAsync(pythonCode);
+            document.getElementById("output").innerText = output;
         }
-        birdImg.onload = () => document.getElementById("message").style.display = "block";
     </script>
 </body>
 </html>
