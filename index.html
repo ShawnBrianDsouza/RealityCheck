@@ -70,16 +70,33 @@
 
   <script>
     const wordPairs = [
-      ["Beach", "Mountain"],
-      ["Pizza", "Burger"],
-      ["School", "College"],
-      ["Library", "Bookstore"],
-      ["Kitchen", "Dining Room"],
-      ["Hotel", "Resort"],
-      ["Forest", "Jungle"],
-      ["Desert", "Ocean"],
-      ["Cinema", "Theatre"],
-      ["Train Station", "Airport"]
+      ["Mango", "Papaya"], ["Orange", "Guava"], ["Grapes", "Apple"], ["Banana", "Pineapple"],
+      ["Forest", "Mountain"], ["Beach", "Island"], ["Hotel", "Resort"], ["Library", "Bookstore"],
+      ["School", "College"], ["Rain", "Drizzle"], ["Storm", "Wind"], ["Snow", "Fog"],
+      ["Cinema", "Theatre"], ["Kitchen", "Dining Room"], ["Bus Stop", "Train Station"],
+      ["Airport", "Helipad"], ["Bedroom", "Living Room"], ["Laptop", "Tablet"],
+      ["Phone", "Charger"], ["Pizza", "Burger"], ["Sandwich", "Fries"], ["Pasta", "Noodles"],
+      ["Taco", "Biryani"], ["Subway", "Harbor"], ["Cafeteria", "Playground"],
+      ["Balcony", "Terrace"], ["Cabin", "Tent"], ["Inn", "Motel"], ["Valley", "Jungle"],
+      ["Monitor", "Desktop"], ["Mouse", "Keyboard"], ["Smartphone", "Laptop"],
+      ["Notebook", "Folder"], ["Pen", "Pencil"], ["Speaker", "Headphones"],
+      ["Resort", "Guesthouse"], ["Lab", "Hostel"], ["Cloud", "Sun"], ["Ocean", "Desert"],
+      ["Fair", "Mall"], ["Zoo", "Museum"], ["Circus", "Park"], ["Highway", "Runway"],
+      ["College", "Hostel"], ["Bathroom", "Toilet"], ["Balcony", "Lobby"], ["Room", "Hall"],
+      ["Food", "Snacks"], ["Water", "Juice"], ["Juice", "Milkshake"], ["Cricket", "Football"],
+      ["Car", "Bike"], ["Jeep", "SUV"], ["Tea", "Coffee"], ["Bed", "Sofa"], ["Mirror", "Clock"],
+      ["TV", "Remote"], ["Fan", "Cooler"], ["Door", "Window"], ["Plate", "Bowl"],
+      ["Couch", "Chair"], ["Table", "Desk"], ["Curtain", "Blind"], ["Bottle", "Glass"],
+      ["Fountain", "Lake"], ["River", "Stream"], ["Chair", "Bench"], ["Tent", "Hut"],
+      ["Lantern", "Torch"], ["Fire", "Candle"], ["Map", "Compass"], ["Telescope", "Binoculars"],
+      ["Cloud", "Mist"], ["Thunder", "Lightning"], ["Board", "Whiteboard"], ["Chalk", "Marker"],
+      ["Bag", "Backpack"], ["Clock", "Alarm"], ["Game", "Toy"], ["Puzzle", "Riddle"],
+      ["Swing", "Slide"], ["Rope", "Ladder"], ["Soap", "Shampoo"], ["Comb", "Brush"],
+      ["Book", "Notebook"], ["Schoolbag", "Lunchbox"], ["Bus", "Train"], ["Ship", "Boat"],
+      ["Cycle", "Scooter"], ["Helmet", "Cap"], ["Gloves", "Scarf"], ["Jacket", "Sweater"],
+      ["Socks", "Shoes"], ["Boots", "Slippers"], ["Cereal", "Oats"], ["Juice", "Soda"],
+      ["Ticket", "Pass"], ["Badge", "Tag"], ["ID", "Passport"], ["Stapler", "Puncher"],
+      ["Envelope", "Letter"], ["Stamp", "Postcard"], ["Mail", "Package"], ["Box", "Carton"]
     ];
 
     function toggleWord(id) {
@@ -88,26 +105,23 @@
     }
 
     function newGame() {
-      // Pick random pair
       const pair = wordPairs[Math.floor(Math.random() * wordPairs.length)];
       const commonWord = pair[0];
       const spyWord = pair[1];
 
-      // Randomly assign spy
       const players = ["shawn", "riya", "mishu"];
       const spy = players[Math.floor(Math.random() * players.length)];
 
-      // Assign words
       players.forEach(player => {
         const wordElement = document.getElementById(player);
-        wordElement.style.display = "none"; // Hide word
+        wordElement.style.display = "none";
         wordElement.textContent = player === spy ? spyWord : commonWord;
       });
 
-      alert("✅ New round started! Only one is the spy. Let the guessing begin!");
+      alert("🕵️ New round started! One random spy has a different word.");
     }
 
-    // Start game on first load
+    // Start a game on page load
     window.onload = newGame;
   </script>
 
