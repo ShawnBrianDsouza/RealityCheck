@@ -1,51 +1,115 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Run Python in Browser</title>
-    <script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
+  <title>Spy Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      text-align: center;
+      padding: 30px;
+    }
+    .player-box {
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 20px;
+      width: 300px;
+      margin: 20px auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .word {
+      display: none;
+      font-size: 18px;
+      margin-top: 10px;
+    }
+    .reveal-button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 8px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .reset-button {
+      background-color: #ff4444;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      margin-top: 30px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+  </style>
 </head>
 <body>
-    <h2>Enter Your Registration Number</h2>
-    <input type="number" id="regNumber" placeholder="Enter number">
-    <button onclick="runPython()">Run Python</button>
-    <p id="output"></p>
 
-    <script>
-        async function loadPyodideAndRun() {
-            window.pyodide = await loadPyodide();
-        }
-        loadPyodideAndRun();
+  <h2>🔍 Spy Game: Secret Word Reveal</h2>
 
-        async function runPython() {
-            let inputVal = document.getElementById("regNumber").value;
-            if (!inputVal) {
-                document.getElementById("output").innerText = "Please enter a number.";
-                return;
-            }
+  <div class="player-box">
+    <h3>Shawn</h3>
+    <button class="reveal-button" onclick="toggleWord('shawn')">👁️ Show/Hide Word</button>
+    <div id="shawn" class="word">???</div>
+  </div>
 
-            let pythonCode = `
-from fractions import Fraction
+  <div class="player-box">
+    <h3>Riya</h3>
+    <button class="reveal-button" onclick="toggleWord('riya')">👁️ Show/Hide Word</button>
+    <div id="riya" class="word">???</div>
+  </div>
 
-x = int(${inputVal})  # Taking input from JavaScript
-a = x % 10
-b = (x % 100 - a) // 10
+  <div class="player-box">
+    <h3>Mishu</h3>
+    <button class="reveal-button" onclick="toggleWord('mishu')">👁️ Show/Hide Word</button>
+    <div id="mishu" class="word">???</div>
+  </div>
 
-if b == -1:
-    result = "Invalid input: results in division by zero"
-else:
-    val = 3 * (a + 1) / (b + 1)
-    x = 1 / val
-    fraction_x = Fraction(x).limit_denominator()
-    result = "x < " + str(fraction_x)
+  <button class="reset-button" onclick="newGame()">🔁 New Game</button>
 
-result  # Return result
-`;
+  <script>
+    const wordPairs = [
+      ["Beach", "Mountain"],
+      ["Pizza", "Burger"],
+      ["School", "College"],
+      ["Library", "Bookstore"],
+      ["Kitchen", "Dining Room"],
+      ["Hotel", "Resort"],
+      ["Forest", "Jungle"],
+      ["Desert", "Ocean"],
+      ["Cinema", "Theatre"],
+      ["Train Station", "Airport"]
+    ];
 
-            let output = await pyodide.runPythonAsync(pythonCode);
-            document.getElementById("output").innerText = output;
-        }
-    </script>
+    function toggleWord(id) {
+      const wordDiv = document.getElementById(id);
+      wordDiv.style.display = wordDiv.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function newGame() {
+      // Pick random pair
+      const pair = wordPairs[Math.floor(Math.random() * wordPairs.length)];
+      const commonWord = pair[0];
+      const spyWord = pair[1];
+
+      // Randomly assign spy
+      const players = ["shawn", "riya", "mishu"];
+      const spy = players[Math.floor(Math.random() * players.length)];
+
+      // Assign words
+      players.forEach(player => {
+        const wordElement = document.getElementById(player);
+        wordElement.style.display = "none"; // Hide word
+        wordElement.textContent = player === spy ? spyWord : commonWord;
+      });
+
+      alert("✅ New round started! Only one is the spy. Let the guessing begin!");
+    }
+
+    // Start game on first load
+    window.onload = newGame;
+  </script>
+
 </body>
 </html>
