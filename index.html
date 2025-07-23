@@ -1,312 +1,187 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🔍 Spy Game: Ultra Edition</title>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Roboto&display=swap" rel="stylesheet">
-  <style>
-    body {
-      font-family: 'Roboto', sans-serif;
-      background: radial-gradient(circle at top, #0f2027, #203a43, #2c5364);
-      margin: 0;
-      padding: 0;
-      color: white;
-      text-align: center;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-
-    h2 {
-      font-family: 'Orbitron', sans-serif;
-      font-size: 2.5em;
-      margin-top: 40px;
-      text-shadow: 0 0 10px cyan;
-    }
-
-    .player-box {
-      background: rgba(255, 255, 255, 0.1);
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-radius: 15px;
-      width: 300px;
-      margin: 20px auto;
-      padding: 20px;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
-      transition: transform 0.4s ease, box-shadow 0.4s ease;
-    }
-
-    .player-box:hover {
-      transform: scale(1.03);
-      box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
-    }
-
-    .reveal-button, .reset-button {
-      font-family: 'Orbitron', sans-serif;
-      background: linear-gradient(135deg, #00feba, #5b86e5);
-      border: none;
-      color: white;
-      padding: 10px 20px;
-      border-radius: 10px;
-      cursor: pointer;
-      font-size: 1em;
-      box-shadow: 0 0 10px cyan;
-      transition: all 0.3s ease;
-    }
-
-    .reveal-button:hover, .reset-button:hover {
-      transform: scale(1.1);
-      box-shadow: 0 0 15px #00e6e6;
-    }
-
-    .word {
-      margin-top: 15px;
-      font-size: 20px;
-      display: none;
-      background-color: rgba(255, 255, 255, 0.2);
-      border-radius: 10px;
-      padding: 10px;
-      box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.5);
-      animation: fadeIn 0.5s ease forwards;
-    }
-
-    @keyframes fadeIn {
-      0% { opacity: 0; transform: scale(0.9); }
-      100% { opacity: 1; transform: scale(1); }
-    }
-
-    .reset-button {
-      margin: 40px auto;
-      display: block;
-    }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>C Program - Search and Sort</title>
+  <style>
+    body {
+      font-family: monospace;
+      background-color: #1e1e1e;
+      color: #dcdcdc;
+      padding: 20px;
+    }
+    h1 {
+      color: #4ec9b0;
+    }
+    pre {
+      background-color: #2d2d2d;
+      padding: 15px;
+      overflow-x: auto;
+      border-radius: 5px;
+      border: 1px solid #444;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    .copy-button {
+      background-color: #4ec9b0;
+      color: black;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-bottom: 15px;
+    }
+  </style>
 </head>
 <body>
 
-  <h2>🔍 Spy Game: Ultra Secret Reveal</h2>
+<h1>🔧 C Program: Search and Sort (Linear, Binary, Bubble, Insertion, Selection)</h1>
 
-  <div class="player-box">
-    <h3>Shawn</h3>
-    <button class="reveal-button" onclick="toggleWord('shawn')">👁️ Show/Hide Word</button>
-    <div id="shawn" class="word">???</div>
-  </div>
+<button class="copy-button" onclick="copyCode()">📋 Copy Code</button>
 
-  <div class="player-box">
-    <h3>Riya</h3>
-    <button class="reveal-button" onclick="toggleWord('riya')">👁️ Show/Hide Word</button>
-    <div id="riya" class="word">???</div>
-  </div>
+<pre id="code">
+#include &lt;stdio.h&gt;
 
-  <div class="player-box">
-    <h3>Mishu</h3>
-    <button class="reveal-button" onclick="toggleWord('mishu')">👁️ Show/Hide Word</button>
-    <div id="mishu" class="word">???</div>
-  </div>
+void linearSearch(int arr[], int n, int key) {
+    for (int i = 0; i &lt; n; i++) {
+        if (arr[i] == key) {
+            printf("Element found at index %d\n", i);
+            return;
+        }
+    }
+    printf("Element not found\n");
+}
 
-  <button class="reset-button" onclick="newGame()">🔁 New Game</button>
+void binarySearch(int arr[], int n, int key) {
+    int low = 0, high = n - 1;
+    while (low &lt;= high) {
+        int mid = (low + high) / 2;
+        if (arr[mid] == key) {
+            printf("Element found at index %d\n", mid);
+            return;
+        } else if (arr[mid] &lt; key) {
+            low = mid + 1;
+        } else {
+            high = mid - 1;
+        }
+    }
+    printf("Element not found\n");
+}
 
-  <script>
-    const wordPairs = [
-      ["Cat", "Tiger"], ["Milk", "Juice"], ["Robot", "Cyborg"], ["Mountain", "Hill"],
-      ["River", "Canal"], ["Spider", "Ant"], ["Rocket", "Plane"], ["Camera", "Mic"],
-      ["Cloud", "Fog"], ["Bread", "Cake"], ["Chess", "Checkers"], ["Knife", "Sword"],
-      ["Candle", "Torch"], ["Helmet", "Cap"], ["Rain", "Snow"], ["Cricket", "Football"],
-      ["Shark", "Whale"], ["Drum", "Guitar"], ["Book", "Notebook"], ["Brush", "Comb"],
-      ["Ice", "Snow"], ["Ball", "Globe"], ["Train", "Metro"], ["Spoon", "Fork"],
-      ["Fan", "AC"], ["Chair", "Sofa"], ["Mouse", "Trackpad"], ["Coin", "Token"],
-      ["Clock", "Watch"], ["Laptop", "Tablet"], ["Ocean", "Desert"], ["Phone", "Walkie"],
-      ["Suit", "Armor"], ["Tree", "Plant"], ["Wall", "Fence"], ["Light", "Lamp"],
-      ["Bus", "Van"], ["Key", "Remote"], ["Box", "Chest"], ["TV", "Projector"],
-      ["Stone", "Pebble"], ["Bottle", "Flask"], ["Shoe", "Boot"], ["Tie", "Scarf"],
-      ["Glove", "Mitten"], ["Tunnel", "Cave"], ["Window", "Mirror"], ["Tiger", "Lion"],
-      ["Belt", "Rope"], ["Leaf", "Petal"], ["Bed", "Mattress"], ["Butterfly", "Moth"],
-      ["Leaf", "Twig"], ["Fish", "Frog"], ["Star", "Planet"], ["Cup", "Mug"],
-      ["Door", "Gate"], ["Ship", "Boat"], ["Bee", "Wasp"], ["Rocket", "Satellite"],
-      ["Pillow", "Cushion"], ["Spider", "Scorpion"], ["Chair", "Stool"], ["Salt", "Sugar"],
-      ["Pen", "Pencil"], ["Notebook", "Diary"], ["Tent", "Cottage"], ["Bus", "Truck"],
-      ["River", "Stream"], ["Stone", "Brick"], ["Drum", "Bongo"], ["Ladder", "Stairs"],
-      ["Plate", "Tray"], ["Fork", "Chopsticks"], ["Bowl", "Cup"], ["Sand", "Soil"],
-      ["Towel", "Napkin"], ["Zip", "Button"], ["Chain", "Rope"], ["Fountain", "Sprinkler"],
-      ["Cloud", "Mist"], ["Fan", "Cooler"], ["Tunnel", "Bridge"], ["Ghost", "Shadow"],
-      ["Alien", "Mutant"], ["Monster", "Demon"], ["Hero", "Villain"], ["Witch", "Fairy"],
-      ["Robot", "Drone"], ["Dragon", "Phoenix"], ["Sword", "Axe"], ["Bullet", "Arrow"],
-      ["Boomerang", "Frisbee"], ["Snail", "Slug"], ["Worm", "Snake"], ["Banana", "Mango"],
-      ["Pizza", "Burger"], ["Taco", "Biryani"], ["Orange", "Guava"], ["Mango", "Papaya"],
-      ["Grapes", "Apple"], ["Storm", "Wind"]
-    ];
+void bubbleSort(int arr[], int n) {
+    for (int i = 0; i &lt; n - 1; i++) {
+        for (int j = 0; j &lt; n - i - 1; j++) {
+            if (arr[j] &gt; arr[j + 1]) {
+                int temp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = temp;
+            }
+        }
+    }
+    printf("Array sorted using Bubble Sort\n");
+}
 
-    function toggleWord(id) {
-      const wordDiv = document.getElementById(id);
-      wordDiv.style.display = (wordDiv.style.display === 'none' || wordDiv.style.display === '') ? 'block' : 'none';
-    }
+void insertionSort(int arr[], int n) {
+    for (int i = 1; i &lt; n; i++) {
+        int key = arr[i];
+        int j = i - 1;
+        while (j &gt;= 0 &amp;&amp; arr[j] &gt; key) {
+            arr[j + 1] = arr[j];
+            j--;
+        }
+        arr[j + 1] = key;
+    }
+    printf("Array sorted using Insertion Sort\n");
+}
 
-    function newGame() {
-      const pair = wordPairs[Math.floor(Math.random() * wordPairs.length)];
-      const commonWord = pair[0];
-      const spyWord = pair[1];
+void selectionSort(int arr[], int n) {
+    for (int i = 0; i &lt; n - 1; i++) {
+        int min = i;
+        for (int j = i + 1; j &lt; n; j++) {
+            if (arr[j] &lt; arr[min])
+                min = j;
+        }
+        int temp = arr[i];
+        arr[i] = arr[min];
+        arr[min] = temp;
+    }
+    printf("Array sorted using Selection Sort\n");
+}
 
-      const players = ["#include <stdio.h>
-#include <stdlib.h>
-
-// Function Prototypes
-void linearSearch(int arr[], int n);
-void binarySearch(int arr[], int n);
-void bubbleSort(int arr[], int n);
-void insertionSort(int arr[], int n);
-void selectionSort(int arr[], int n);
-
-void printArray(int arr[], int n);
+void displayArray(int arr[], int n) {
+    printf("Array: ");
+    for (int i = 0; i &lt; n; i++) {
+        printf("%d ", arr[i]);
+    }
+    printf("\n");
+}
 
 int main() {
-    int n, choice;
+    int n, choice, key;
     printf("Enter number of elements: ");
-    scanf("%d", &n);
-
+    scanf("%d", &amp;n);
     int arr[n];
-    printf("Enter %d elements:\n", n);
-    for (int i = 0; i < n; i++) {
-        scanf("%d", &arr[i]);
+    printf("Enter %d elements: ", n);
+    for (int i = 0; i &lt; n; i++) {
+        scanf("%d", &amp;arr[i]);
     }
 
-    while (1) {
+    do {
         printf("\nChoose an operation:\n");
         printf("1. Linear Search\n");
-        printf("2. Binary Search (on sorted array)\n");
+        printf("2. Binary Search (sorted array only)\n");
         printf("3. Bubble Sort\n");
         printf("4. Insertion Sort\n");
         printf("5. Selection Sort\n");
-        printf("6. Exit\n");
+        printf("6. Display Array\n");
+        printf("0. Exit\n");
         printf("Enter your choice: ");
-        scanf("%d", &choice);
+        scanf("%d", &amp;choice);
 
         switch (choice) {
-            case 1: linearSearch(arr, n); break;
-            case 2: binarySearch(arr, n); break;
-            case 3: bubbleSort(arr, n); break;
-            case 4: insertionSort(arr, n); break;
-            case 5: selectionSort(arr, n); break;
-            case 6: exit(0);
-            default: printf("Invalid choice. Try again.\n");
+            case 1:
+                printf("Enter element to search (Linear): ");
+                scanf("%d", &amp;key);
+                linearSearch(arr, n, key);
+                break;
+            case 2:
+                printf("Enter element to search (Binary): ");
+                scanf("%d", &amp;key);
+                binarySearch(arr, n, key);
+                break;
+            case 3:
+                bubbleSort(arr, n);
+                break;
+            case 4:
+                insertionSort(arr, n);
+                break;
+            case 5:
+                selectionSort(arr, n);
+                break;
+            case 6:
+                displayArray(arr, n);
+                break;
+            case 0:
+                printf("Exiting program.\n");
+                break;
+            default:
+                printf("Invalid choice.\n");
         }
-    }
+    } while (choice != 0);
 
     return 0;
 }
+</pre>
 
-// ---------- Linear Search ----------
-void linearSearch(int arr[], int n) {
-    int key;
-    printf("Enter element to search (Linear): ");
-    scanf("%d", &key);
-    for (int i = 0; i < n; i++) {
-        if (arr[i] == key) {
-            printf("Element %d found at index %d\n", key, i);
-            return;
-        }
-    }
-    printf("Element %d not found.\n", key);
-}
+<script>
+  function copyCode() {
+    const code = document.getElementById("code").innerText;
+    navigator.clipboard.writeText(code);
+    alert("Code copied to clipboard!");
+  }
+</script>
 
-// ---------- Binary Search ----------
-void binarySearch(int arr[], int n) {
-    // Sort first (Bubble Sort) for binary search
-    int temp[n];
-    for (int i = 0; i < n; i++) temp[i] = arr[i];
-    bubbleSort(temp, n);
-
-    int key;
-    printf("Enter element to search (Binary): ");
-    scanf("%d", &key);
-
-    int left = 0, right = n - 1;
-    while (left <= right) {
-        int mid = (left + right) / 2;
-        if (temp[mid] == key) {
-            printf("Element %d found at index %d (sorted array)\n", key, mid);
-            return;
-        } else if (temp[mid] < key) {
-            left = mid + 1;
-        } else {
-            right = mid - 1;
-        }
-    }
-    printf("Element %d not found.\n", key);
-}
-
-// ---------- Bubble Sort ----------
-void bubbleSort(int arr[], int n) {
-    int temp[n];
-    for (int i = 0; i < n; i++) temp[i] = arr[i];
-
-    for (int i = 0; i < n - 1; i++)
-        for (int j = 0; j < n - i - 1; j++)
-            if (temp[j] > temp[j + 1]) {
-                int t = temp[j];
-                temp[j] = temp[j + 1];
-                temp[j + 1] = t;
-            }
-
-    printf("Array after Bubble Sort:\n");
-    printArray(temp, n);
-}
-
-// ---------- Insertion Sort ----------
-void insertionSort(int arr[], int n) {
-    int temp[n];
-    for (int i = 0; i < n; i++) temp[i] = arr[i];
-
-    for (int i = 1; i < n; i++) {
-        int key = temp[i];
-        int j = i - 1;
-        while (j >= 0 && temp[j] > key) {
-            temp[j + 1] = temp[j];
-            j--;
-        }
-        temp[j + 1] = key;
-    }
-
-    printf("Array after Insertion Sort:\n");
-    printArray(temp, n);
-}
-
-// ---------- Selection Sort ----------
-void selectionSort(int arr[], int n) {
-    int temp[n];
-    for (int i = 0; i < n; i++) temp[i] = arr[i];
-
-    for (int i = 0; i < n - 1; i++) {
-        int minIdx = i;
-        for (int j = i + 1; j < n; j++)
-            if (temp[j] < temp[minIdx])
-                minIdx = j;
-        int t = temp[i];
-        temp[i] = temp[minIdx];
-        temp[minIdx] = t;
-    }
-
-    printf("Array after Selection Sort:\n");
-    printArray(temp, n);
-}
-
-// ---------- Print Array ----------
-void printArray(int arr[], int n) {
-    for (int i = 0; i < n; i++)
-        printf("%d ", arr[i]);
-    printf("\n");
-}
-", "riya", "mishu"];
-      const spy = players[Math.floor(Math.random() * players.length)];
-
-      players.forEach(player => {
-        const wordElement = document.getElementById(player);
-        wordElement.style.display = "none";
-        wordElement.textContent = player === spy ? spyWord : commonWord;
-      });
-
-      alert("🕵️ New round started! One random spy has a different word.");
-    }
-
-    window.onload = newGame;
-  </script>
 </body>
 </html>
+
