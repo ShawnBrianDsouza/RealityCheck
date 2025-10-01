@@ -6,29 +6,40 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f2f2f2;
+      background: #f9f9f9;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding-top: 30px;
+      padding: 30px;
     }
+
     .player-box {
-      background: white;
-      border: 1px solid #ccc;
+      background-color: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
       padding: 20px;
-      margin: 10px;
+      margin: 15px;
       width: 300px;
       text-align: center;
-      box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
     }
+
     .word {
-      font-size: 24px;
+      font-size: 20px;
       margin: 10px 0;
       display: none;
+      font-weight: bold;
+      color: #2c3e50;
     }
+
     button {
       padding: 8px 12px;
+      font-size: 14px;
       cursor: pointer;
+    }
+
+    h1 {
+      margin-bottom: 20px;
     }
   </style>
 </head>
@@ -36,66 +47,72 @@
 
   <h1>Spy Word Game</h1>
 
-  <div class="player-box" id="shallita">
+  <div class="player-box">
     <h2>Shallita</h2>
     <div class="word" id="word-shallita">[hidden]</div>
-    <button onclick="toggleWord('shallita')">👁 Show Word</button>
+    <button onclick="toggleWord('shallita')">👁 Show/Hide Word</button>
   </div>
 
-  <div class="player-box" id="riya">
+  <div class="player-box">
     <h2>Riya</h2>
     <div class="word" id="word-riya">[hidden]</div>
-    <button onclick="toggleWord('riya')">👁 Show Word</button>
+    <button onclick="toggleWord('riya')">👁 Show/Hide Word</button>
   </div>
 
-  <div class="player-box" id="shawn">
+  <div class="player-box">
     <h2>Shawn</h2>
     <div class="word" id="word-shawn">[hidden]</div>
-    <button onclick="toggleWord('shawn')">👁 Show Word</button>
+    <button onclick="toggleWord('shawn')">👁 Show/Hide Word</button>
   </div>
 
   <script>
     const wordPairs = [
-      { common: "Beach", spy: "Desert" },
-      { common: "Library", spy: "Bookstore" },
-      { common: "Hospital", spy: "Clinic" },
-      { common: "School", spy: "College" },
-      { common: "Bank", spy: "Vault" },
-      { common: "Restaurant", spy: "Cafeteria" },
+      { common: "green apple", spy: "custard" },
+      { common: "swimming pool", spy: "bathtub" },
+      { common: "library", spy: "bookstore" },
+      { common: "classroom", spy: "office" },
+      { common: "pizza", spy: "lasagna" },
+      { common: "hospital", spy: "pharmacy" },
+      { common: "mountain", spy: "hill" },
+      { common: "airplane", spy: "helicopter" }
     ];
 
     function shuffle(array) {
       for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1)];
+        const j = Math.floor(Math.random() * (i + 1));
         [array[i], array[j]] = [array[j], array[i]];
       }
     }
 
     function assignWords() {
-      const pair = wordPairs[Math.floor(Math.random() * wordPairs.length)];
       const players = ["shallita", "riya", "shawn"];
-      shuffle(players);
-      
-      // Pick one spy randomly
-      const spyPlayer = players[0];
+      shuffle(players); // Randomize who is spy
 
-      // Assign words
-      players.forEach(player => {
-        const wordElement = document.getElementById("word-" + player);
-        wordElement.textContent = (player === spyPlayer) ? pair.spy : pair.common;
+      const wordPair = wordPairs[Math.floor(Math.random() * wordPairs.length)];
+
+      const spy = players[0]; // First player is spy
+      const nonSpies = players.slice(1);
+
+      // Assign spy word
+      document.getElementById("word-" + spy).textContent = wordPair.spy;
+
+      // Assign same word to others
+      nonSpies.forEach(player => {
+        document.getElementById("word-" + player).textContent = wordPair.common;
       });
     }
 
     function toggleWord(player) {
-      const wordElement = document.getElementById("word-" + player);
-      if (wordElement.style.display === "none" || wordElement.style.display === "") {
-        wordElement.style.display = "block";
+      const wordEl = document.getElementById("word-" + player);
+      if (wordEl.style.display === "none" || wordEl.style.display === "") {
+        wordEl.style.display = "block";
       } else {
-        wordElement.style.display = "none";
+        wordEl.style.display = "none";
       }
     }
 
-    assignWords(); // Run on page load
+    // Start game
+    assignWords();
   </script>
 
 </body>
