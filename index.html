@@ -74,7 +74,51 @@
       { common: "pizza", spy: "lasagna" },
       { common: "hospital", spy: "pharmacy" },
       { common: "mountain", spy: "hill" },
-      { common: "airplane", spy: "helicopter" }
+      { common: "airplane", spy: "helicopter" },
+      { common: "cinema", spy: "theater" },
+      { common: "beach", spy: "desert" },
+      { common: "soccer", spy: "rugby" },
+      { common: "zebra", spy: "horse" },
+      { common: "wedding", spy: "birthday" },
+      { common: "guitar", spy: "violin" },
+      { common: "skateboard", spy: "surfboard" },
+      { common: "notebook", spy: "diary" },
+      { common: "hotel", spy: "motel" },
+      { common: "firefighter", spy: "policeman" },
+      { common: "ballet", spy: "yoga" },
+      { common: "microwave", spy: "oven" },
+      { common: "volcano", spy: "mountain" },
+      { common: "clock", spy: "timer" },
+      { common: "football", spy: "basketball" },
+      { common: "snow", spy: "sand" },
+      { common: "penguin", spy: "duck" },
+      { common: "jungle", spy: "forest" },
+      { common: "cupcake", spy: "muffin" },
+      { common: "mirror", spy: "window" },
+      { common: "bus", spy: "train" },
+      { common: "chef", spy: "waiter" },
+      { common: "glasses", spy: "goggles" },
+      { common: "milk", spy: "yogurt" },
+      { common: "sunflower", spy: "daisy" },
+      { common: "tiger", spy: "leopard" },
+      { common: "camera", spy: "binoculars" },
+      { common: "rocket", spy: "missile" },
+      { common: "piano", spy: "keyboard" },
+      { common: "castle", spy: "palace" },
+      { common: "submarine", spy: "boat" },
+      { common: "laptop", spy: "tablet" },
+      { common: "astronaut", spy: "pilot" },
+      { common: "crayon", spy: "marker" },
+      { common: "bicycle", spy: "motorbike" },
+      { common: "bridge", spy: "tunnel" },
+      { common: "koala", spy: "panda" },
+      { common: "candle", spy: "lamp" },
+      { common: "refrigerator", spy: "freezer" },
+      { common: "school", spy: "university" },
+      { common: "park", spy: "garden" },
+      { common: "ice cream", spy: "pudding" },
+      { common: "drums", spy: "bongo" },
+      { common: "train station", spy: "bus stop" }
     ];
 
     function shuffle(array) {
@@ -96,7 +140,7 @@
       // Assign spy word
       document.getElementById("word-" + spy).textContent = wordPair.spy;
 
-      // Assign same word to others
+      // Assign common word to others
       nonSpies.forEach(player => {
         document.getElementById("word-" + player).textContent = wordPair.common;
       });
@@ -111,8 +155,7 @@
       }
     }
 
-    // Start game
-    assignWords();
+    assignWords(); // Start game
   </script>
 
 </body>
