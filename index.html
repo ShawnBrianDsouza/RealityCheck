@@ -1,162 +1,150 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Spy Word Game</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Image to PDF Converter</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f9f9f9;
+      background: #f2f4f8;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 30px;
-    }
-
-    .player-box {
-      background-color: #fff;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      padding: 20px;
-      margin: 15px;
-      width: 300px;
-      text-align: center;
-    }
-
-    .word {
-      font-size: 20px;
-      margin: 10px 0;
-      display: none;
-      font-weight: bold;
-      color: #2c3e50;
-    }
-
-    button {
-      padding: 8px 12px;
-      font-size: 14px;
-      cursor: pointer;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
     }
 
     h1 {
-      margin-bottom: 20px;
+      color: #333;
+    }
+
+    input[type="file"] {
+      margin: 20px 0;
+    }
+
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    #preview {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 20px;
+      max-width: 90%;
+      overflow-y: auto;
+    }
+
+    #preview img {
+      width: 150px;
+      height: auto;
+      border-radius: 5px;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+    }
+
+    #message {
+      color: #555;
+      margin-top: 15px;
     }
   </style>
 </head>
 <body>
+  <h1>Image to PDF Converter</h1>
+  <input type="file" id="imageInput" accept="image/*" multiple />
+  <button id="convertBtn">Convert to PDF</button>
+  <div id="message"></div>
+  <div id="preview"></div>
 
-  <h1>Spy Word Game</h1>
-
-  <div class="player-box">
-    <h2>Shallita</h2>
-    <div class="word" id="word-shallita">[hidden]</div>
-    <button onclick="toggleWord('shallita')">👁 Show/Hide Word</button>
-  </div>
-
-  <div class="player-box">
-    <h2>Riya</h2>
-    <div class="word" id="word-riya">[hidden]</div>
-    <button onclick="toggleWord('riya')">👁 Show/Hide Word</button>
-  </div>
-
-  <div class="player-box">
-    <h2>Shawn</h2>
-    <div class="word" id="word-shawn">[hidden]</div>
-    <button onclick="toggleWord('shawn')">👁 Show/Hide Word</button>
-  </div>
-
+  <!-- jsPDF library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
-    const wordPairs = [
-      { common: "green apple", spy: "custard" },
-      { common: "swimming pool", spy: "bathtub" },
-      { common: "library", spy: "bookstore" },
-      { common: "classroom", spy: "office" },
-      { common: "pizza", spy: "lasagna" },
-      { common: "hospital", spy: "pharmacy" },
-      { common: "mountain", spy: "hill" },
-      { common: "airplane", spy: "helicopter" },
-      { common: "cinema", spy: "theater" },
-      { common: "beach", spy: "desert" },
-      { common: "soccer", spy: "rugby" },
-      { common: "zebra", spy: "horse" },
-      { common: "wedding", spy: "birthday" },
-      { common: "guitar", spy: "violin" },
-      { common: "skateboard", spy: "surfboard" },
-      { common: "notebook", spy: "diary" },
-      { common: "hotel", spy: "motel" },
-      { common: "firefighter", spy: "policeman" },
-      { common: "ballet", spy: "yoga" },
-      { common: "microwave", spy: "oven" },
-      { common: "volcano", spy: "mountain" },
-      { common: "clock", spy: "timer" },
-      { common: "football", spy: "basketball" },
-      { common: "snow", spy: "sand" },
-      { common: "penguin", spy: "duck" },
-      { common: "jungle", spy: "forest" },
-      { common: "cupcake", spy: "muffin" },
-      { common: "mirror", spy: "window" },
-      { common: "bus", spy: "train" },
-      { common: "chef", spy: "waiter" },
-      { common: "glasses", spy: "goggles" },
-      { common: "milk", spy: "yogurt" },
-      { common: "sunflower", spy: "daisy" },
-      { common: "tiger", spy: "leopard" },
-      { common: "camera", spy: "binoculars" },
-      { common: "rocket", spy: "missile" },
-      { common: "piano", spy: "keyboard" },
-      { common: "castle", spy: "palace" },
-      { common: "submarine", spy: "boat" },
-      { common: "laptop", spy: "tablet" },
-      { common: "astronaut", spy: "pilot" },
-      { common: "crayon", spy: "marker" },
-      { common: "bicycle", spy: "motorbike" },
-      { common: "bridge", spy: "tunnel" },
-      { common: "koala", spy: "panda" },
-      { common: "candle", spy: "lamp" },
-      { common: "refrigerator", spy: "freezer" },
-      { common: "school", spy: "university" },
-      { common: "park", spy: "garden" },
-      { common: "ice cream", spy: "pudding" },
-      { common: "drums", spy: "bongo" },
-      { common: "train station", spy: "bus stop" }
-    ];
+    const { jsPDF } = window.jspdf;
 
-    function shuffle(array) {
-      for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
+    const input = document.getElementById("imageInput");
+    const preview = document.getElementById("preview");
+    const message = document.getElementById("message");
+    const convertBtn = document.getElementById("convertBtn");
+
+    input.addEventListener("change", () => {
+      preview.innerHTML = "";
+      const files = Array.from(input.files);
+
+      if (files.length === 0) {
+        message.textContent = "No images selected.";
+        return;
       }
-    }
 
-    function assignWords() {
-      const players = ["shallita", "riya", "shawn"];
-      shuffle(players); // Randomize who is spy
+      message.textContent = `${files.length} image(s) selected.`;
+      files.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = e => {
+          const img = document.createElement("img");
+          img.src = e.target.result;
+          preview.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+      });
+    });
 
-      const wordPair = wordPairs[Math.floor(Math.random() * wordPairs.length)];
+    convertBtn.addEventListener("click", async () => {
+      const files = Array.from(input.files);
+      if (files.length === 0) {
+        alert("Please upload at least one image!");
+        return;
+      }
 
-      const spy = players[0]; // First player is spy
-      const nonSpies = players.slice(1);
+      message.textContent = "Converting to PDF, please wait...";
 
-      // Assign spy word
-      document.getElementById("word-" + spy).textContent = wordPair.spy;
+      const pdf = new jsPDF({ orientation: "portrait", unit: "px", format: "a4" });
+      let firstPage = true;
 
-      // Assign common word to others
-      nonSpies.forEach(player => {
-        document.getElementById("word-" + player).textContent = wordPair.common;
+      for (let file of files) {
+        const imgData = await toDataURL(file);
+        const img = new Image();
+        img.src = imgData;
+
+        await new Promise(res => (img.onload = res));
+
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+
+        const ratio = Math.min(pageWidth / img.width, pageHeight / img.height);
+        const imgWidth = img.width * ratio;
+        const imgHeight = img.height * ratio;
+        const x = (pageWidth - imgWidth) / 2;
+        const y = (pageHeight - imgHeight) / 2;
+
+        if (!firstPage) pdf.addPage();
+        firstPage = false;
+
+        pdf.addImage(imgData, "JPEG", x, y, imgWidth, imgHeight);
+      }
+
+      pdf.save("images.pdf");
+      message.textContent = "✅ PDF created successfully!";
+    });
+
+    function toDataURL(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
       });
     }
-
-    function toggleWord(player) {
-      const wordEl = document.getElementById("word-" + player);
-      if (wordEl.style.display === "none" || wordEl.style.display === "") {
-        wordEl.style.display = "block";
-      } else {
-        wordEl.style.display = "none";
-      }
-    }
-
-    assignWords(); // Start game
   </script>
-
 </body>
 </html>
