@@ -1,149 +1,85 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Image to PDF Converter</title>
+  <meta charset="UTF-8">
+  <title>Verilog Online Playground</title>
+  <script src="https://cdn.jsdelivr.net/npm/wavedrom@2.9.1/wavedrom.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/verilog.js@latest/dist/verilog.min.js"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f2f4f8;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
-    }
-
-    h1 {
-      color: #333;
-    }
-
-    input[type="file"] {
-      margin: 20px 0;
-    }
-
-    button {
-      background-color: #007bff;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-
-    button:hover {
-      background-color: #0056b3;
-    }
-
-    #preview {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 10px;
-      margin-top: 20px;
-      max-width: 90%;
-      overflow-y: auto;
-    }
-
-    #preview img {
-      width: 150px;
-      height: auto;
-      border-radius: 5px;
-      box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
-    }
-
-    #message {
-      color: #555;
-      margin-top: 15px;
-    }
+    body { font-family: sans-serif; background: #1e1e1e; color: #ddd; }
+    textarea { width: 48%; height: 250px; background: #2b2b2b; color: #eee; border: none; padding: 8px; font-family: monospace; }
+    #controls { margin: 10px 0; }
+    #output { background: #111; padding: 10px; height: 150px; overflow-y: auto; white-space: pre; border: 1px solid #333; }
+    #waveform { background: #fff; margin-top: 20px; padding: 10px; }
   </style>
 </head>
 <body>
-  <h1>Image to PDF Converter</h1>
-  <input type="file" id="imageInput" accept="image/*" multiple />
-  <button id="convertBtn">Convert to PDF</button>
-  <div id="message"></div>
-  <div id="preview"></div>
+  <h2>🧠 Verilog Browser Playground (iverilog-like)</h2>
 
-  <!-- jsPDF library -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <div>
+    <h3>Main Module(s)</h3>
+    <textarea id="code">// Example module
+module adder(input [3:0] a, b, output [4:0] sum);
+  assign sum = a + b;
+endmodule
+</textarea>
+
+    <h3>Testbench</h3>
+    <textarea id="tb">// Example testbench
+module tb;
+  reg [3:0] a, b;
+  wire [4:0] sum;
+  adder uut(a, b, sum);
+  initial begin
+    $dumpvars;
+    a=0; b=0;
+    #5 a=3; b=4;
+    #5 a=9; b=5;
+    #5 $finish;
+  end
+endmodule
+</textarea>
+  </div>
+
+  <div id="controls">
+    <button onclick="runSim()">▶ Run Simulation</button>
+  </div>
+
+  <h3>Simulation Output:</h3>
+  <div id="output"></div>
+
+  <h3>Waveform:</h3>
+  <div id="waveform">
+    <script type="WaveDrom">
+    { signal: [] }
+    </script>
+  </div>
+
   <script>
-    const { jsPDF } = window.jspdf;
+    async function runSim() {
+      const code = document.getElementById('code').value;
+      const tb = document.getElementById('tb').value;
+      const output = document.getElementById('output');
+      output.textContent = 'Running simulation...';
 
-    const input = document.getElementById("imageInput");
-    const preview = document.getElementById("preview");
-    const message = document.getElementById("message");
-    const convertBtn = document.getElementById("convertBtn");
+      try {
+        const verilogCode = code + '\n' + tb;
+        const sim = new Verilog();
+        const result = await sim.run(verilogCode);
 
-    input.addEventListener("change", () => {
-      preview.innerHTML = "";
-      const files = Array.from(input.files);
+        output.textContent = result.output || 'Simulation complete (no text output).';
 
-      if (files.length === 0) {
-        message.textContent = "No images selected.";
-        return;
+        if (result.waveform && result.waveform.length > 0) {
+          document.getElementById('waveform').innerHTML =
+            '<script type="WaveDrom">{"signal": ' +
+            JSON.stringify(result.waveform) + '}</' + 'script>';
+          WaveDrom.ProcessAll();
+        } else {
+          document.getElementById('waveform').innerHTML = '<em>No waveform data</em>';
+        }
+      } catch (e) {
+        output.textContent = 'Error: ' + e.message;
       }
-
-      message.textContent = `${files.length} image(s) selected.`;
-      files.forEach(file => {
-        const reader = new FileReader();
-        reader.onload = e => {
-          const img = document.createElement("img");
-          img.src = e.target.result;
-          preview.appendChild(img);
-        };
-        reader.readAsDataURL(file);
-      });
-    });
-
-    convertBtn.addEventListener("click", async () => {
-      const files = Array.from(input.files);
-      if (files.length === 0) {
-        alert("Please upload at least one image!");
-        return;
-      }
-
-      message.textContent = "Converting to PDF, please wait...";
-
-      const pdf = new jsPDF({ orientation: "portrait", unit: "px", format: "a4" });
-      let firstPage = true;
-
-      for (let file of files) {
-        const imgData = await toDataURL(file);
-        const img = new Image();
-        img.src = imgData;
-
-        await new Promise(res => (img.onload = res));
-
-        const pageWidth = pdf.internal.pageSize.getWidth();
-        const pageHeight = pdf.internal.pageSize.getHeight();
-
-        const ratio = Math.min(pageWidth / img.width, pageHeight / img.height);
-        const imgWidth = img.width * ratio;
-        const imgHeight = img.height * ratio;
-        const x = (pageWidth - imgWidth) / 2;
-        const y = (pageHeight - imgHeight) / 2;
-
-        if (!firstPage) pdf.addPage();
-        firstPage = false;
-
-        pdf.addImage(imgData, "JPEG", x, y, imgWidth, imgHeight);
-      }
-
-      pdf.save("images.pdf");
-      message.textContent = "✅ PDF created successfully!";
-    });
-
-    function toDataURL(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = e => resolve(e.target.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
     }
   </script>
 </body>
