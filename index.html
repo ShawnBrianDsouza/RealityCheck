@@ -1,22 +1,22 @@
 <!--
-Ditto WhatsApp (single-file HTML) - demo
-How to use:
-1. Create a Firebase project (https://console.firebase.google.com/).
-2. Enable Authentication -> Anonymous sign-in.
-3. Create a Realtime Database, set rules to allow read/write for authenticated users while testing, for example:
-   {
-     "rules": {
-       ".read": "auth != null",
-       ".write": "auth != null"
-     }
-   }
-   (Change rules before production!)
-4. Copy your Firebase config and paste into `FIREBASE_CONFIG` below.
-5. Open this file locally or host on GitHub Pages. Anyone with the page and DB config can join public rooms and chat in realtime.
+Ditto Meet — single-file HTML demo
+Features:
+1. Open camera + microphone preview.
+2. Share your screen (via getDisplayMedia).
+3. Interactive crop tool (drag/resize rectangle) to choose how much of the shared screen to publish.
+4. Preview the cropped region live. You can "Publish" the cropped canvas as a MediaStream (canvas.captureStream) and record/download it.
 
-Notes & limitations:
-- This is a demo. Messages are stored in your Firebase Realtime Database.
-- For a real app add user verification, moderation, storage limits, and secure DB rules.
+Security & hosting notes:
+- getUserMedia / getDisplayMedia require HTTPS or localhost. Host on GitHub Pages (https) to test.
+- This demo does not include automatic WebRTC signaling. I included a preview + record flow and show how you can use canvas.captureStream() to obtain a stream you can feed into WebRTC or other APIs.
+
+How to use:
+1. Click "Start Camera" to allow camera + mic. You'll see your camera preview.
+2. Click "Share Screen" and select a screen/window/tab. The screen will appear and the crop rectangle will be placed on top.
+3. Drag the crop rectangle or drag its edges to change what will be captured.
+4. Click "Start Cropped Stream" to produce a stream from the cropped canvas and preview it. Click "Record" to record the cropped stream and download the resulting file.
+
+This file is intended for demonstration and prototyping only.
 -->
 
 <!doctype html>
@@ -24,270 +24,320 @@ Notes & limitations:
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Ditto WhatsApp — Demo</title>
+  <title>Ditto Meet — Demo</title>
   <style>
-    :root{--bg:#0b1416;--panel:#081216;--accent:#25D366;--muted:#88959a;--in:#111921}
+    :root{--bg:#0f1720;--panel:#0b1220;--accent:#4f8cff;--muted:#9aa8b3}
     *{box-sizing:border-box;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial}
-    body{margin:0;height:100vh;background:linear-gradient(180deg,#071018 0%,#07171a 100%);color:#dbe7ea;display:flex;align-items:center;justify-content:center}
-    .app{width:100%;max-width:1000px;height:90vh;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border-radius:12px;display:grid;grid-template-columns:320px 1fr;overflow:hidden;box-shadow:0 8px 30px rgba(2,6,10,0.6)}
-    .sidebar{background:var(--panel);padding:18px;display:flex;flex-direction:column;gap:12px}
-    .brand{display:flex;align-items:center;gap:12px}
-    .logo{width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,#6be38b,#25d366);display:flex;align-items:center;justify-content:center;font-weight:700;color:#012}
-    h1{font-size:16px;margin:0}
-    .me{font-size:13px;color:var(--muted)}
-    .rooms{margin-top:6px;flex:1;overflow:auto;padding-right:6px}
-    .room{padding:10px;border-radius:8px;margin-bottom:8px;background:transparent;display:flex;align-items:center;gap:10px;cursor:pointer}
-    .room:hover{background:rgba(255,255,255,0.02)}
-    .room .title{font-weight:600}
-    .room .sub{font-size:12px;color:var(--muted)}
-    .newroom{display:flex;gap:8px}
-    .btn{background:var(--accent);border:none;padding:8px 12px;border-radius:8px;color:#012;font-weight:700;cursor:pointer}
-    .main{display:flex;flex-direction:column;background:var(--in)}
-    .chatHeader{padding:16px;border-bottom:1px solid rgba(255,255,255,0.03);display:flex;align-items:center;gap:12px}
-    .chatTitle{font-weight:700}
-    .chatWindow{flex:1;padding:20px;overflow:auto;display:flex;flex-direction:column;gap:12px}
-    .msg{max-width:70%;padding:10px 12px;border-radius:12px;line-height:1.2}
-    .msg.me{align-self:flex-end;background:linear-gradient(180deg,#25D366,#18a84f);color:#012;border-bottom-right-radius:4px}
-    .msg.other{align-self:flex-start;background:rgba(255,255,255,0.03)}
-    .meta{font-size:11px;color:var(--muted);margin-top:4px}
-    .composer{padding:12px;border-top:1px solid rgba(255,255,255,0.03);display:flex;gap:8px}
-    .composer input[type=text]{flex:1;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:inherit}
-    .small{font-size:12px;color:var(--muted)}
-    .status-dot{width:10px;height:10px;border-radius:50%;background:#999}
-    .online{background:#4cd964}
-    .footer-note{font-size:12px;color:var(--muted);padding:8px}
-    @media(max-width:780px){.app{grid-template-columns:1fr} .sidebar{display:none}}
+    body{margin:0;background:linear-gradient(180deg,#071226 0%,#071e2a 100%);color:#e6f0f6;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:28px}
+    .container{width:1100px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border-radius:12px;padding:16px;box-shadow:0 12px 40px rgba(2,6,10,0.6)}
+    .header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    h1{margin:0;font-size:20px}
+    .controls{display:flex;gap:8px;flex-wrap:wrap}
+    button{background:var(--accent);border:none;padding:10px 12px;border-radius:8px;color:#fff;font-weight:700;cursor:pointer}
+    .secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px;border-radius:8px;color:var(--muted);font-weight:600}
+    .layout{display:grid;grid-template-columns:1fr 420px;gap:12px;margin-top:12px}
+    .stage{background:#071a23;border-radius:8px;padding:12px;min-height:540px;position:relative}
+    video, canvas{max-width:100%;border-radius:6px;background:#000}
+    .side{display:flex;flex-direction:column;gap:12px}
+    .panel{background:#071a23;padding:12px;border-radius:8px;min-height:150px}
+    .label{font-size:13px;color:var(--muted);margin-bottom:6px}
+    .crop-rect{position:absolute;border:2px dashed rgba(255,255,255,0.6);pointer-events:auto;box-shadow:0 4px 20px rgba(0,0,0,0.6);}
+    .handle{position:absolute;background:#fff;width:10px;height:10px;border-radius:2px;transform:translate(-50%,-50%);}
+    .handle.tl{left:0;top:0;cursor:nwse-resize}
+    .handle.tr{right:0;top:0;cursor:nesw-resize}
+    .handle.bl{left:0;bottom:0;cursor:nesw-resize}
+    .handle.br{right:0;bottom:0;cursor:nwse-resize}
+    .meta{font-size:12px;color:var(--muted)}
+    .small{font-size:13px;color:var(--muted)}
+    .status{display:flex;gap:10px;align-items:center}
+    .status .dot{width:10px;height:10px;border-radius:50%;background:#666}
+    .status .on{background:#24c26b}
+    .previewBox{background:#041219;padding:10px;border-radius:6px}
+    .footer{margin-top:12px;font-size:13px;color:var(--muted)}
+    input[type=range]{width:100%}
   </style>
 </head>
 <body>
-  <div class="app">
-    <div class="sidebar">
-      <div class="brand">
-        <div class="logo">D</div>
-        <div>
-          <h1>Ditto WhatsApp</h1>
-          <div class="me small" id="myName">Not signed in</div>
-        </div>
-      </div>
-
+  <div class="container">
+    <div class="header">
       <div>
-        <label class="small">Join or create a public room</label>
-        <div class="newroom">
-          <input id="roomInput" placeholder="room name (e.g. general)" />
-          <button class="btn" id="joinBtn">Join</button>
-        </div>
+        <h1>Ditto Meet — Demo</h1>
+        <div class="small">Camera, mic, screen share with crop tool. Host on HTTPS (GitHub Pages) to use screen capture.</div>
       </div>
-
-      <div class="rooms" id="roomsList"></div>
-
-      <div class="footer-note">This is a demo using Firebase Realtime Database. Replace the config and follow the instructions at the top of this file.</div>
-    </div>
-
-    <div class="main">
-      <div class="chatHeader">
-        <div style="display:flex;align-items:center;gap:12px">
-          <div class="status-dot" id="presenceDot"></div>
-        </div>
-        <div style="flex:1">
-          <div class="chatTitle" id="roomTitle">Join a room to start chatting</div>
-          <div class="small" id="roomSub">Public rooms — messages are stored in your Firebase DB</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px">
-          <button id="signoutBtn" class="btn" style="background:#ff6b6b">Sign out</button>
-        </div>
-      </div>
-
-      <div class="chatWindow" id="chatWindow"></div>
-
-      <div class="composer">
-        <input id="msgInput" type="text" placeholder="Type a message and press Enter" disabled />
-        <button class="btn" id="sendBtn" disabled>Send</button>
+      <div class="controls">
+        <button id="startCamBtn">Start Camera</button>
+        <button id="shareScreenBtn">Share Screen</button>
+        <button id="startCroppedBtn" class="secondary">Start Cropped Stream</button>
+        <button id="recordBtn" class="secondary">Record</button>
+        <button id="downloadBtn" class="secondary" disabled>Download</button>
       </div>
     </div>
+
+    <div class="layout">
+      <div class="stage" id="stage">
+        <!-- visible camera preview -->
+        <div style="display:flex;gap:12px">
+          <div style="flex:1">
+            <div class="label">Camera + Mic</div>
+            <video id="camVideo" autoplay playsinline muted style="width:100%;height:240px;object-fit:cover;border-radius:6px"></video>
+          </div>
+          <div style="width:280px">
+            <div class="label">Cropped Stream Preview</div>
+            <div class="previewBox">
+              <video id="croppedPreview" autoplay playsinline muted style="width:100%;height:180px;object-fit:cover;border-radius:6px;background:#000"></video>
+            </div>
+          </div>
+        </div>
+
+        <hr style="margin:12px 0;border-color:rgba(255,255,255,0.03)" />
+
+        <div>
+          <div class="label">Shared Screen (select a window/tab/screen)</div>
+          <div style="position:relative">
+            <video id="screenVideo" autoplay playsinline style="width:100%;height:320px;object-fit:contain;background:#000"></video>
+            <!-- Crop rectangle inserted dynamically -->
+          </div>
+          <!-- hidden canvas used for cropping -->
+          <canvas id="cropCanvas" width="1280" height="720" style="display:none"></canvas>
+        </div>
+      </div>
+
+      <div class="side">
+        <div class="panel">
+          <div class="label">Crop controls</div>
+          <div class="meta">Drag the rectangle on the shared screen to select the region to publish. Use corner handles to resize. You can also use the scale slider.</div>
+          <div style="height:12px"></div>
+          <div class="label">Scale (zoom crop)</div>
+          <input id="scaleRange" type="range" min="0.1" max="2" step="0.01" value="1">
+          <div style="height:12px"></div>
+          <div class="label">Crop rectangle coordinates</div>
+          <div id="coords" class="small">x:0 y:0 w:0 h:0</div>
+        </div>
+
+        <div class="panel">
+          <div class="label">Publish & Record</div>
+          <div class="meta">The "Start Cropped Stream" button creates a stream from the cropped canvas (canvas.captureStream()). Use that stream for WebRTC or record it using the Record button here.</div>
+        </div>
+
+        <div class="panel">
+          <div class="label">Notes</div>
+          <div class="small">- This demo runs entirely in the browser. No server required for the UI. Screen capture requires HTTPS or localhost. For multi-party calls you must wire the cropped stream into a WebRTC peer connection.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">Tip: Host this on GitHub Pages (HTTPS). After starting the cropped stream, integrate it with a WebRTC PeerConnection by using <code>const stream = canvas.captureStream(30)</code> and adding its tracks to your RTCPeerConnection.</div>
   </div>
 
-  <!-- Firebase compat SDK (easy to drop-in) -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
   <script>
-    // ----- EDIT: paste your firebase config here -----
-    const FIREBASE_CONFIG = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT.firebaseapp.com",
-      databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT.appspot.com",
-      messagingSenderId: "...",
-      appId: "..."
-    };
-    // -------------------------------------------------
+    // Elements
+    const startCamBtn = document.getElementById('startCamBtn');
+    const shareScreenBtn = document.getElementById('shareScreenBtn');
+    const startCroppedBtn = document.getElementById('startCroppedBtn');
+    const recordBtn = document.getElementById('recordBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const camVideo = document.getElementById('camVideo');
+    const screenVideo = document.getElementById('screenVideo');
+    const cropCanvas = document.getElementById('cropCanvas');
+    const croppedPreview = document.getElementById('croppedPreview');
+    const stage = document.getElementById('stage');
+    const scaleRange = document.getElementById('scaleRange');
+    const coordsEl = document.getElementById('coords');
 
-    // Basic UI refs
-    const myNameEl = document.getElementById('myName');
-    const roomInput = document.getElementById('roomInput');
-    const joinBtn = document.getElementById('joinBtn');
-    const roomsList = document.getElementById('roomsList');
-    const roomTitle = document.getElementById('roomTitle');
-    const roomSub = document.getElementById('roomSub');
-    const presenceDot = document.getElementById('presenceDot');
-    const chatWindow = document.getElementById('chatWindow');
-    const msgInput = document.getElementById('msgInput');
-    const sendBtn = document.getElementById('sendBtn');
-    const signoutBtn = document.getElementById('signoutBtn');
+    let camStream = null;
+    let screenStream = null;
+    let cropRect = {x:50, y:50, w:400, h:200};
+    let dragging = false, resizing = false, dragOffset = {x:0,y:0}, resizeCorner = null;
+    let cropCanvasCtx = cropCanvas.getContext('2d');
+    let animationFrameId = null;
+    let croppedStream = null;
+    let recorder = null; let recordedChunks = [];
 
-    // Minimal utilities
-    function el(tag, cls, text){const e=document.createElement(tag); if(cls) e.className=cls; if(text!==undefined) e.textContent=text; return e}
-
-    // Initialize Firebase app
-    firebase.initializeApp(FIREBASE_CONFIG);
-    const auth = firebase.auth();
-    const db = firebase.database();
-
-    // Simple anonymous sign-in and profile setup
-    let currentUser = null;
-    async function signIn() {
+    // Start camera
+    startCamBtn.onclick = async ()=>{
       try{
-        const res = await auth.signInAnonymously();
-        currentUser = res.user;
-        // get name from localStorage or ask
-        let name = localStorage.getItem('ditto_name');
-        if(!name){
-          name = prompt('Choose a display name (public)') || ('Guest'+Math.floor(Math.random()*999));
-          localStorage.setItem('ditto_name', name);
-        }
-        myNameEl.textContent = name;
-        // write presence
-        const presenceRef = db.ref('presence/'+currentUser.uid);
-        await presenceRef.set({name, online:true, lastSeen: Date.now()});
-        presenceRef.onDisconnect().set({name, online:false, lastSeen: Date.now()});
-        listenRooms();
-        updatePresenceIndicator(true);
-      }catch(e){
-        console.error('signin', e); alert('Sign-in failed: '+e.message);
+        camStream = await navigator.mediaDevices.getUserMedia({video:true, audio:true});
+        camVideo.srcObject = camStream;
+        camVideo.muted = true; // avoid echo
+      }catch(e){ alert('Camera access denied or not available: '+e.message); }
+    };
+
+    // Share screen
+    shareScreenBtn.onclick = async ()=>{
+      try{
+        screenStream = await navigator.mediaDevices.getDisplayMedia({video:true, audio:false});
+        screenVideo.srcObject = screenStream;
+        screenVideo.onloadedmetadata = ()=> screenVideo.play();
+        // create/insert crop rectangle
+        insertCropRect();
+        // set canvas size to video natural size when possible
+        screenVideo.addEventListener('loadeddata', ()=>{
+          try{
+            const w = screenVideo.videoWidth || 1280;
+            const h = screenVideo.videoHeight || 720;
+            cropCanvas.width = w; cropCanvas.height = h;
+            // set default to center
+            cropRect = {x: Math.round(w*0.1), y: Math.round(h*0.1), w: Math.round(w*0.6), h: Math.round(h*0.6)};
+            updateCropUI();
+          }catch(e){console.warn(e)}
+        });
+
+        // listen for end of screen share
+        screenStream.getVideoTracks()[0].addEventListener('ended', ()=>{
+          removeCropRect();
+          cancelAnimationFrame(animationFrameId);
+        });
+      }catch(e){ alert('Screen share failed: '+e.message); }
+    };
+
+    // Insert crop rectangle overlay
+    let cropEl = null;
+    function insertCropRect(){
+      removeCropRect();
+      cropEl = document.createElement('div');
+      cropEl.className = 'crop-rect';
+      cropEl.style.left = cropRect.x + 'px'; cropEl.style.top = cropRect.y + 'px';
+      cropEl.style.width = cropRect.w + 'px'; cropEl.style.height = cropRect.h + 'px';
+      // handles
+      ['tl','tr','bl','br'].forEach(c=>{ const h=document.createElement('div'); h.className='handle '+c; cropEl.appendChild(h); });
+      // make it draggable/resizable
+      const container = screenVideo.parentElement; // relative positioned
+      container.style.position = 'relative';
+      container.appendChild(cropEl);
+
+      // mouse events
+      cropEl.addEventListener('mousedown', onCropMouseDown);
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('mouseup', onMouseUp);
+
+      // begin render loop
+      drawLoop();
+    }
+    function removeCropRect(){ if(cropEl){ cropEl.remove(); cropEl=null; } }
+
+    function onCropMouseDown(e){
+      e.preventDefault();
+      const rect = cropEl.getBoundingClientRect();
+      const offsetX = e.clientX - rect.left; const offsetY = e.clientY - rect.top;
+      // check handles (within 12px of corners)
+      const handleSize = 16;
+      const corner = getHandleAt(offsetX, offsetY, rect.width, rect.height, handleSize);
+      if(corner){ resizing = true; resizeCorner = corner; }
+      else { dragging = true; dragOffset.x = offsetX; dragOffset.y = offsetY; }
+    }
+
+    function getHandleAt(x,y,w,h,hs){ if(x<hs && y<hs) return 'tl'; if(x>w-hs && y<hs) return 'tr'; if(x<hs && y>h-hs) return 'bl'; if(x>w-hs && y>h-hs) return 'br'; return null; }
+
+    function onMouseMove(e){ if(!cropEl) return; const parentRect = screenVideo.parentElement.getBoundingClientRect();
+      const mx = e.clientX - parentRect.left; const my = e.clientY - parentRect.top;
+      if(dragging){ const nx = mx - dragOffset.x; const ny = my - dragOffset.y; cropRect.x = clamp(nx, 0, cropCanvas.width - cropRect.w); cropRect.y = clamp(ny, 0, cropCanvas.height - cropRect.h); updateCropUI(); }
+      if(resizing && resizeCorner){ // compute new dims depending on corner
+        if(resizeCorner === 'tl'){ const nx = mx; const ny = my; const newW = cropRect.w + (cropRect.x - nx); const newH = cropRect.h + (cropRect.y - ny); cropRect.w = Math.max(20, newW); cropRect.h = Math.max(20, newH); cropRect.x = clamp(nx, 0, cropCanvas.width-20); cropRect.y = clamp(ny, 0, cropCanvas.height-20); }
+        if(resizeCorner === 'tr'){ const nx = mx; const ny = my; const newW = Math.max(20, nx - cropRect.x); const newH = Math.max(20, cropRect.h + (cropRect.y - ny)); cropRect.w = clamp(newW,20,cropCanvas.width - cropRect.x); cropRect.h = clamp(newH,20,cropCanvas.height - cropRect.y); cropRect.y = clamp(ny,0,cropCanvas.height-20); }
+        if(resizeCorner === 'bl'){ const nx = mx; const ny = my; const newW = Math.max(20, cropRect.w + (cropRect.x - nx)); const newH = Math.max(20, ny - cropRect.y); cropRect.w = clamp(newW,20,cropCanvas.width); cropRect.h = clamp(newH,20,cropCanvas.height - cropRect.y); cropRect.x = clamp(nx,0,cropCanvas.width-20); }
+        if(resizeCorner === 'br'){ const nx = mx; const ny = my; const newW = Math.max(20, nx - cropRect.x); const newH = Math.max(20, ny - cropRect.y); cropRect.w = clamp(newW,20,cropCanvas.width - cropRect.x); cropRect.h = clamp(newH,20,cropCanvas.height - cropRect.y); }
+        updateCropUI();
       }
     }
+    function onMouseUp(){ dragging=false; resizing=false; resizeCorner=null; }
 
-    function updatePresenceIndicator(isOnline){
-      presenceDot.className = 'status-dot ' + (isOnline? 'online': '');
+    function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+
+    function updateCropUI(){
+      if(cropEl){ cropEl.style.left = cropRect.x + 'px'; cropEl.style.top = cropRect.y + 'px'; cropEl.style.width = cropRect.w + 'px'; cropEl.style.height = cropRect.h + 'px'; }
+      coordsEl.textContent = `x:${Math.round(cropRect.x)} y:${Math.round(cropRect.y)} w:${Math.round(cropRect.w)} h:${Math.round(cropRect.h)}`;
     }
 
-    // sign out handler
-    signoutBtn.onclick = async ()=>{
-      if(currentUser){
-        await db.ref('presence/'+currentUser.uid).set({name: localStorage.getItem('ditto_name')||'Guest', online:false, lastSeen: Date.now()});
-      }
-      auth.signOut();
-      currentUser = null;
-      myNameEl.textContent = 'Not signed in';
-      updatePresenceIndicator(false);
+    // Draw loop: copy selected region from screenVideo to canvas and show preview
+    function drawLoop(){
+      if(!screenVideo || screenVideo.readyState < 2) { animationFrameId = requestAnimationFrame(drawLoop); return; }
+      const scale = parseFloat(scaleRange.value) || 1;
+      // draw entire screen onto canvas
+      try{
+        cropCanvasCtx.save();
+        cropCanvasCtx.clearRect(0,0,cropCanvas.width,cropCanvas.height);
+        cropCanvasCtx.drawImage(screenVideo, 0, 0, cropCanvas.width, cropCanvas.height);
+        // compute scaled crop (centered on cropRect)
+        const cx = cropRect.x; const cy = cropRect.y; const cw = cropRect.w; const ch = cropRect.h;
+        const sx = cx; const sy = cy; const sw = cw; const sh = ch;
+        // destination size: use sw, sh but apply scale (zoom)
+        const dw = Math.round(sw * scale); const dh = Math.round(sh * scale);
+        // draw the selected region onto an offscreen canvas sized to the destination
+        const off = document.createElement('canvas'); off.width = dw; off.height = dh; const offCtx = off.getContext('2d');
+        offCtx.drawImage(cropCanvas, sx, sy, sw, sh, 0, 0, dw, dh);
+        // show in cropped preview
+        croppedPreview.width = dw; croppedPreview.height = dh;
+        // draw off to preview's internal canvas by using its srcObject (we'll set via captureStream -> not needed here). Simpler: convert to blob URL and set as video srcObject via MediaSource is complex. Instead, we make a temporary image and set to an <img> style? Simpler: set preview as canvas by copying off to a visible canvas element. We'll instead use croppedPreview as a video by setting its srcObject to a stream created from off.captureStream().
+        // To avoid creating many streams, we'll draw off to a persistent previewCanvas and set its captureStream once.
+
+        // Use a persistent previewCanvas in DOM
+        if(!window.__previewCanvas){ window.__previewCanvas = document.createElement('canvas'); window.__previewCanvasCtx = window.__previewCanvas.getContext('2d'); window.__previewCanvas.style.display='none'; document.body.appendChild(window.__previewCanvas); }
+        window.__previewCanvas.width = dw; window.__previewCanvas.height = dh; window.__previewCanvasCtx.clearRect(0,0,dw,dh); window.__previewCanvasCtx.drawImage(off,0,0);
+        // ensure preview video is connected to preview canvas stream
+        if(!croppedPreview.srcObject){ try{ const s = window.__previewCanvas.captureStream(30); croppedPreview.srcObject = s; croppedPreview.muted = true; croppedPreview.play(); }catch(e){ console.warn('preview captureStream failed', e); } }
+
+      }catch(e){ /* ignore drawing errors while video not ready */ }
+      updateCropUI();
+      animationFrameId = requestAnimationFrame(drawLoop);
     }
 
-    // Listen to public rooms list (rooms created under /roomsList)
-    function listenRooms(){
-      const listRef = db.ref('roomsList');
-      listRef.on('value', snap=>{
-        roomsList.innerHTML = '';
-        const data = snap.val() || {};
-        const keys = Object.keys(data).sort();
-        if(keys.length===0){
-          roomsList.appendChild(el('div','small','No rooms yet — create one above'));
-        } else {
-          keys.forEach(k=>{
-            const r = data[k];
-            const div = el('div','room');
-            const title = el('div','title', k);
-            const sub = el('div','sub', (r.lastMsg? r.lastMsg.slice(0,40): 'Empty') + ' • ' + (r.count||0)+' msgs');
-            div.appendChild(title); div.appendChild(sub);
-            div.onclick = ()=> joinRoom(k);
-            roomsList.appendChild(div);
-          });
-        }
-      });
-    }
+    // Start cropped stream: create a stream from persistent preview canvas
+    startCroppedBtn.onclick = ()=>{
+      if(!window.__previewCanvas){ alert('No screen selected or canvas not ready'); return; }
+      // create or update croppedStream
+      croppedStream = window.__previewCanvas.captureStream(30);
+      // attach audio from screen or cam if available (this demo uses cam audio if present)
+      const audioTrack = (camStream && camStream.getAudioTracks()[0]) || (screenStream && screenStream.getAudioTracks && screenStream.getAudioTracks()[0]);
+      const out = new MediaStream();
+      // add video tracks
+      croppedStream.getVideoTracks().forEach(t=> out.addTrack(t));
+      if(audioTrack) out.addTrack(audioTrack);
+      // show in preview (already showing via canvas) but set srcObject for clarity
+      croppedPreview.srcObject = out;
+      croppedPreview.muted = false;
+      croppedPreview.play();
+      alert('Cropped stream started. Use this stream (canvas.captureStream) in a WebRTC PeerConnection or press Record to record it locally.');
+    };
 
-    // Create or join a room
-    let activeRoom = null;
-    let messagesRef = null;
-    function joinRoom(name){
-      if(!currentUser){ alert('Please sign in (we auto-sign anonymously)'); return; }
-      activeRoom = name.trim();
-      roomTitle.textContent = '# ' + activeRoom;
-      msgInput.disabled = false; sendBtn.disabled = false; msgInput.focus();
-      chatWindow.innerHTML = '';
+    // Recording
+    recordBtn.onclick = ()=>{
+      if(!croppedStream && !window.__previewCanvas){ alert('Start cropped stream first'); return; }
+      // if no croppedStream, use canvas
+      const recStream = (croppedStream) ? croppedStream : window.__previewCanvas.captureStream(30);
+      recordedChunks = [];
+      try{
+        recorder = new MediaRecorder(recStream, {mimeType: 'video/webm;codecs=vp9,opus'});
+      }catch(e){ try{ recorder = new MediaRecorder(recStream); }catch(err){ alert('Recording not supported: ' + err.message); return; } }
+      recorder.ondataavailable = ev=>{ if(ev.data && ev.data.size) recordedChunks.push(ev.data); };
+      recorder.onstop = ()=>{
+        const blob = new Blob(recordedChunks, {type:'video/webm'});
+        const url = URL.createObjectURL(blob);
+        downloadBtn.href = url; downloadBtn.download = 'ditto_cropped.webm'; downloadBtn.disabled = false; downloadBtn.textContent = 'Download';
+        // create link click automatically? keep manual
+      };
+      recorder.start();
+      recordBtn.textContent = 'Stop';
+      recordBtn.onclick = ()=>{ recorder.stop(); recordBtn.textContent = 'Record'; recordBtn.onclick = recordBtnHandler; };
+      const recordBtnHandler = recordBtn.onclick;
+    };
 
-      // keep a lightweight roomsList entry
-      const infoRef = db.ref('roomsList/'+activeRoom);
-      infoRef.update({lastOpened: Date.now()});
+    // helper to keep original handler reference (restored above)
+    function recordBtnHandler(){ }
 
-      // attach messages listener
-      if(messagesRef) messagesRef.off();
-      messagesRef = db.ref('rooms/'+activeRoom+'/messages');
-      messagesRef.limitToLast(200).on('child_added', snap=>{
-        const msg = snap.val();
-        appendMessage(msg);
-      });
+    // download link behavior
+    downloadBtn.addEventListener('click', ()=>{ /* user downloads via link */ });
 
-      // increment count (best-effort)
-      const countRef = db.ref('roomsList/'+activeRoom+'/count');
-      countRef.transaction(c=> (c||0));
-    }
+    // utility: update preview when scale changes
+    scaleRange.addEventListener('input', ()=>{ /* drawLoop will pick up scale */ });
 
-    function appendMessage(msg){
-      const mine = msg.uid === currentUser.uid;
-      const div = el('div','msg '+(mine? 'me': 'other'));
-      div.innerHTML = '<div style="font-weight:600">'+escapeHtml(msg.name)+'</div><div style="margin-top:6px">'+escapeHtml(msg.text)+'</div><div class="meta">'+new Date(msg.ts).toLocaleString()+'</div>';
-      chatWindow.appendChild(div);
-      chatWindow.scrollTop = chatWindow.scrollHeight;
-    }
+    // prevent accidental text selection while dragging
+    window.addEventListener('selectstart', e=>{ if(dragging || resizing) e.preventDefault(); });
 
-    function escapeHtml(s){ if(!s) return ''; return s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
-
-    // Send message
-    async function sendMessage(){
-      const text = msgInput.value.trim(); if(!text || !activeRoom) return;
-      const payload = {uid: currentUser.uid, name: localStorage.getItem('ditto_name')||'Guest', text, ts: Date.now()};
-      const pushRef = db.ref('rooms/'+activeRoom+'/messages').push();
-      await pushRef.set(payload);
-      // update roomsList lastMsg
-      db.ref('roomsList/'+activeRoom).update({lastMsg: text.slice(0,140), lastTs: Date.now()});
-      msgInput.value = '';
-    }
-
-    msgInput.addEventListener('keydown', e=>{ if(e.key==='Enter') sendMessage(); });
-    sendBtn.onclick = sendMessage;
-
-    // join button
-    joinBtn.onclick = ()=>{
-      const name = (roomInput.value || '').trim();
-      if(!name) return alert('Enter a room name');
-      // create lightweight roomsList node
-      db.ref('roomsList/'+name).update({created: Date.now()});
-      joinRoom(name);
-      roomInput.value = '';
-    }
-
-    // show online users (simple list on header)
-    function watchPresence(){
-      const p = db.ref('presence');
-      p.on('value', snap=>{
-        const data = snap.val()||{};
-        const online = Object.values(data).filter(x=>x && x.online).length;
-        roomSub.textContent = online + ' users online • public rooms';
-      });
-    }
-
-    // Start: sign in anonymously, then listen presence
-    auth.onAuthStateChanged(u=>{
-      if(u){ currentUser = u; updatePresenceIndicator(true); } else { currentUser = null; updatePresenceIndicator(false); }
+    // ensure cleanup when page unloads
+    window.addEventListener('beforeunload', ()=>{
+      if(camStream) camStream.getTracks().forEach(t=>t.stop());
+      if(screenStream) screenStream.getTracks().forEach(t=>t.stop());
     });
-
-    // On page load: sign in
-    (async ()=>{
-      await signIn();
-      watchPresence();
-    })();
 
   </script>
 </body>
