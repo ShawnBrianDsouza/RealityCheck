@@ -1,87 +1,294 @@
-<!DOCTYPE html>
+<!--
+Ditto WhatsApp (single-file HTML) - demo
+How to use:
+1. Create a Firebase project (https://console.firebase.google.com/).
+2. Enable Authentication -> Anonymous sign-in.
+3. Create a Realtime Database, set rules to allow read/write for authenticated users while testing, for example:
+   {
+     "rules": {
+       ".read": "auth != null",
+       ".write": "auth != null"
+     }
+   }
+   (Change rules before production!)
+4. Copy your Firebase config and paste into `FIREBASE_CONFIG` below.
+5. Open this file locally or host on GitHub Pages. Anyone with the page and DB config can join public rooms and chat in realtime.
+
+Notes & limitations:
+- This is a demo. Messages are stored in your Firebase Realtime Database.
+- For a real app add user verification, moderation, storage limits, and secure DB rules.
+-->
+
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Verilog Online Playground</title>
-  <script src="https://cdn.jsdelivr.net/npm/wavedrom@2.9.1/wavedrom.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/verilog.js@latest/dist/verilog.min.js"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ditto WhatsApp — Demo</title>
   <style>
-    body { font-family: sans-serif; background: #1e1e1e; color: #ddd; }
-    textarea { width: 48%; height: 250px; background: #2b2b2b; color: #eee; border: none; padding: 8px; font-family: monospace; }
-    #controls { margin: 10px 0; }
-    #output { background: #111; padding: 10px; height: 150px; overflow-y: auto; white-space: pre; border: 1px solid #333; }
-    #waveform { background: #fff; margin-top: 20px; padding: 10px; }
+    :root{--bg:#0b1416;--panel:#081216;--accent:#25D366;--muted:#88959a;--in:#111921}
+    *{box-sizing:border-box;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial}
+    body{margin:0;height:100vh;background:linear-gradient(180deg,#071018 0%,#07171a 100%);color:#dbe7ea;display:flex;align-items:center;justify-content:center}
+    .app{width:100%;max-width:1000px;height:90vh;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border-radius:12px;display:grid;grid-template-columns:320px 1fr;overflow:hidden;box-shadow:0 8px 30px rgba(2,6,10,0.6)}
+    .sidebar{background:var(--panel);padding:18px;display:flex;flex-direction:column;gap:12px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,#6be38b,#25d366);display:flex;align-items:center;justify-content:center;font-weight:700;color:#012}
+    h1{font-size:16px;margin:0}
+    .me{font-size:13px;color:var(--muted)}
+    .rooms{margin-top:6px;flex:1;overflow:auto;padding-right:6px}
+    .room{padding:10px;border-radius:8px;margin-bottom:8px;background:transparent;display:flex;align-items:center;gap:10px;cursor:pointer}
+    .room:hover{background:rgba(255,255,255,0.02)}
+    .room .title{font-weight:600}
+    .room .sub{font-size:12px;color:var(--muted)}
+    .newroom{display:flex;gap:8px}
+    .btn{background:var(--accent);border:none;padding:8px 12px;border-radius:8px;color:#012;font-weight:700;cursor:pointer}
+    .main{display:flex;flex-direction:column;background:var(--in)}
+    .chatHeader{padding:16px;border-bottom:1px solid rgba(255,255,255,0.03);display:flex;align-items:center;gap:12px}
+    .chatTitle{font-weight:700}
+    .chatWindow{flex:1;padding:20px;overflow:auto;display:flex;flex-direction:column;gap:12px}
+    .msg{max-width:70%;padding:10px 12px;border-radius:12px;line-height:1.2}
+    .msg.me{align-self:flex-end;background:linear-gradient(180deg,#25D366,#18a84f);color:#012;border-bottom-right-radius:4px}
+    .msg.other{align-self:flex-start;background:rgba(255,255,255,0.03)}
+    .meta{font-size:11px;color:var(--muted);margin-top:4px}
+    .composer{padding:12px;border-top:1px solid rgba(255,255,255,0.03);display:flex;gap:8px}
+    .composer input[type=text]{flex:1;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:inherit}
+    .small{font-size:12px;color:var(--muted)}
+    .status-dot{width:10px;height:10px;border-radius:50%;background:#999}
+    .online{background:#4cd964}
+    .footer-note{font-size:12px;color:var(--muted);padding:8px}
+    @media(max-width:780px){.app{grid-template-columns:1fr} .sidebar{display:none}}
   </style>
 </head>
 <body>
-  <h2>🧠 Verilog Browser Playground (iverilog-like)</h2>
+  <div class="app">
+    <div class="sidebar">
+      <div class="brand">
+        <div class="logo">D</div>
+        <div>
+          <h1>Ditto WhatsApp</h1>
+          <div class="me small" id="myName">Not signed in</div>
+        </div>
+      </div>
 
-  <div>
-    <h3>Main Module(s)</h3>
-    <textarea id="code">// Example module
-module adder(input [3:0] a, b, output [4:0] sum);
-  assign sum = a + b;
-endmodule
-</textarea>
+      <div>
+        <label class="small">Join or create a public room</label>
+        <div class="newroom">
+          <input id="roomInput" placeholder="room name (e.g. general)" />
+          <button class="btn" id="joinBtn">Join</button>
+        </div>
+      </div>
 
-    <h3>Testbench</h3>
-    <textarea id="tb">// Example testbench
-module tb;
-  reg [3:0] a, b;
-  wire [4:0] sum;
-  adder uut(a, b, sum);
-  initial begin
-    $dumpvars;
-    a=0; b=0;
-    #5 a=3; b=4;
-    #5 a=9; b=5;
-    #5 $finish;
-  end
-endmodule
-</textarea>
+      <div class="rooms" id="roomsList"></div>
+
+      <div class="footer-note">This is a demo using Firebase Realtime Database. Replace the config and follow the instructions at the top of this file.</div>
+    </div>
+
+    <div class="main">
+      <div class="chatHeader">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="status-dot" id="presenceDot"></div>
+        </div>
+        <div style="flex:1">
+          <div class="chatTitle" id="roomTitle">Join a room to start chatting</div>
+          <div class="small" id="roomSub">Public rooms — messages are stored in your Firebase DB</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <button id="signoutBtn" class="btn" style="background:#ff6b6b">Sign out</button>
+        </div>
+      </div>
+
+      <div class="chatWindow" id="chatWindow"></div>
+
+      <div class="composer">
+        <input id="msgInput" type="text" placeholder="Type a message and press Enter" disabled />
+        <button class="btn" id="sendBtn" disabled>Send</button>
+      </div>
+    </div>
   </div>
 
-  <div id="controls">
-    <button onclick="runSim()">▶ Run Simulation</button>
-  </div>
-
-  <h3>Simulation Output:</h3>
-  <div id="output"></div>
-
-  <h3>Waveform:</h3>
-  <div id="waveform">
-    <script type="WaveDrom">
-    { signal: [] }
-    </script>
-  </div>
+  <!-- Firebase compat SDK (easy to drop-in) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
   <script>
-    async function runSim() {
-      const code = document.getElementById('code').value;
-      const tb = document.getElementById('tb').value;
-      const output = document.getElementById('output');
-      output.textContent = 'Running simulation...';
+    // ----- EDIT: paste your firebase config here -----
+    const FIREBASE_CONFIG = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT.appspot.com",
+      messagingSenderId: "...",
+      appId: "..."
+    };
+    // -------------------------------------------------
 
-      try {
-        const verilogCode = code + '\n' + tb;
-        const sim = new Verilog();
-        const result = await sim.run(verilogCode);
+    // Basic UI refs
+    const myNameEl = document.getElementById('myName');
+    const roomInput = document.getElementById('roomInput');
+    const joinBtn = document.getElementById('joinBtn');
+    const roomsList = document.getElementById('roomsList');
+    const roomTitle = document.getElementById('roomTitle');
+    const roomSub = document.getElementById('roomSub');
+    const presenceDot = document.getElementById('presenceDot');
+    const chatWindow = document.getElementById('chatWindow');
+    const msgInput = document.getElementById('msgInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const signoutBtn = document.getElementById('signoutBtn');
 
-        output.textContent = result.output || 'Simulation complete (no text output).';
+    // Minimal utilities
+    function el(tag, cls, text){const e=document.createElement(tag); if(cls) e.className=cls; if(text!==undefined) e.textContent=text; return e}
 
-        if (result.waveform && result.waveform.length > 0) {
-          document.getElementById('waveform').innerHTML =
-            '<script type="WaveDrom">{"signal": ' +
-            JSON.stringify(result.waveform) + '}</' + 'script>';
-          WaveDrom.ProcessAll();
-        } else {
-          document.getElementById('waveform').innerHTML = '<em>No waveform data</em>';
+    // Initialize Firebase app
+    firebase.initializeApp(FIREBASE_CONFIG);
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    // Simple anonymous sign-in and profile setup
+    let currentUser = null;
+    async function signIn() {
+      try{
+        const res = await auth.signInAnonymously();
+        currentUser = res.user;
+        // get name from localStorage or ask
+        let name = localStorage.getItem('ditto_name');
+        if(!name){
+          name = prompt('Choose a display name (public)') || ('Guest'+Math.floor(Math.random()*999));
+          localStorage.setItem('ditto_name', name);
         }
-      } catch (e) {
-        output.textContent = 'Error: ' + e.message;
+        myNameEl.textContent = name;
+        // write presence
+        const presenceRef = db.ref('presence/'+currentUser.uid);
+        await presenceRef.set({name, online:true, lastSeen: Date.now()});
+        presenceRef.onDisconnect().set({name, online:false, lastSeen: Date.now()});
+        listenRooms();
+        updatePresenceIndicator(true);
+      }catch(e){
+        console.error('signin', e); alert('Sign-in failed: '+e.message);
       }
     }
+
+    function updatePresenceIndicator(isOnline){
+      presenceDot.className = 'status-dot ' + (isOnline? 'online': '');
+    }
+
+    // sign out handler
+    signoutBtn.onclick = async ()=>{
+      if(currentUser){
+        await db.ref('presence/'+currentUser.uid).set({name: localStorage.getItem('ditto_name')||'Guest', online:false, lastSeen: Date.now()});
+      }
+      auth.signOut();
+      currentUser = null;
+      myNameEl.textContent = 'Not signed in';
+      updatePresenceIndicator(false);
+    }
+
+    // Listen to public rooms list (rooms created under /roomsList)
+    function listenRooms(){
+      const listRef = db.ref('roomsList');
+      listRef.on('value', snap=>{
+        roomsList.innerHTML = '';
+        const data = snap.val() || {};
+        const keys = Object.keys(data).sort();
+        if(keys.length===0){
+          roomsList.appendChild(el('div','small','No rooms yet — create one above'));
+        } else {
+          keys.forEach(k=>{
+            const r = data[k];
+            const div = el('div','room');
+            const title = el('div','title', k);
+            const sub = el('div','sub', (r.lastMsg? r.lastMsg.slice(0,40): 'Empty') + ' • ' + (r.count||0)+' msgs');
+            div.appendChild(title); div.appendChild(sub);
+            div.onclick = ()=> joinRoom(k);
+            roomsList.appendChild(div);
+          });
+        }
+      });
+    }
+
+    // Create or join a room
+    let activeRoom = null;
+    let messagesRef = null;
+    function joinRoom(name){
+      if(!currentUser){ alert('Please sign in (we auto-sign anonymously)'); return; }
+      activeRoom = name.trim();
+      roomTitle.textContent = '# ' + activeRoom;
+      msgInput.disabled = false; sendBtn.disabled = false; msgInput.focus();
+      chatWindow.innerHTML = '';
+
+      // keep a lightweight roomsList entry
+      const infoRef = db.ref('roomsList/'+activeRoom);
+      infoRef.update({lastOpened: Date.now()});
+
+      // attach messages listener
+      if(messagesRef) messagesRef.off();
+      messagesRef = db.ref('rooms/'+activeRoom+'/messages');
+      messagesRef.limitToLast(200).on('child_added', snap=>{
+        const msg = snap.val();
+        appendMessage(msg);
+      });
+
+      // increment count (best-effort)
+      const countRef = db.ref('roomsList/'+activeRoom+'/count');
+      countRef.transaction(c=> (c||0));
+    }
+
+    function appendMessage(msg){
+      const mine = msg.uid === currentUser.uid;
+      const div = el('div','msg '+(mine? 'me': 'other'));
+      div.innerHTML = '<div style="font-weight:600">'+escapeHtml(msg.name)+'</div><div style="margin-top:6px">'+escapeHtml(msg.text)+'</div><div class="meta">'+new Date(msg.ts).toLocaleString()+'</div>';
+      chatWindow.appendChild(div);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    function escapeHtml(s){ if(!s) return ''; return s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
+
+    // Send message
+    async function sendMessage(){
+      const text = msgInput.value.trim(); if(!text || !activeRoom) return;
+      const payload = {uid: currentUser.uid, name: localStorage.getItem('ditto_name')||'Guest', text, ts: Date.now()};
+      const pushRef = db.ref('rooms/'+activeRoom+'/messages').push();
+      await pushRef.set(payload);
+      // update roomsList lastMsg
+      db.ref('roomsList/'+activeRoom).update({lastMsg: text.slice(0,140), lastTs: Date.now()});
+      msgInput.value = '';
+    }
+
+    msgInput.addEventListener('keydown', e=>{ if(e.key==='Enter') sendMessage(); });
+    sendBtn.onclick = sendMessage;
+
+    // join button
+    joinBtn.onclick = ()=>{
+      const name = (roomInput.value || '').trim();
+      if(!name) return alert('Enter a room name');
+      // create lightweight roomsList node
+      db.ref('roomsList/'+name).update({created: Date.now()});
+      joinRoom(name);
+      roomInput.value = '';
+    }
+
+    // show online users (simple list on header)
+    function watchPresence(){
+      const p = db.ref('presence');
+      p.on('value', snap=>{
+        const data = snap.val()||{};
+        const online = Object.values(data).filter(x=>x && x.online).length;
+        roomSub.textContent = online + ' users online • public rooms';
+      });
+    }
+
+    // Start: sign in anonymously, then listen presence
+    auth.onAuthStateChanged(u=>{
+      if(u){ currentUser = u; updatePresenceIndicator(true); } else { currentUser = null; updatePresenceIndicator(false); }
+    });
+
+    // On page load: sign in
+    (async ()=>{
+      await signIn();
+      watchPresence();
+    })();
+
   </script>
 </body>
 </html>
-
