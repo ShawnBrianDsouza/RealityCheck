@@ -1,8 +1,8 @@
 <!--
 Filename: index.html
-Description: Single-file frontend that lets you drag & drop multiple .ppt/.pptx files, reorder them (drag to reorder), and POSTs them to a server endpoint /merge to create a single merged PPTX.
+Description: Single-file frontend that lets you drag & drop multiple .ppt/.pptx files, reorder them (drag to reorder), shows count and total size, and POSTs them to a server endpoint /merge to create a single merged PPTX which is then downloaded.
 
-NOTE: Merging PPTX client-side in the browser is not reliable. This frontend sends files to a server which performs the actual merge. A sample Python Flask server (server.py) using python-pptx is included below the HTML in this document.
+Server: A sample Python Flask server (server.py) using python-pptx is included below the HTML in this document.
 -->
 
 <!doctype html>
@@ -13,7 +13,7 @@ NOTE: Merging PPTX client-side in the browser is not reliable. This frontend sen
   <title>PPT/PPTX Merger</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <style>
-    .dropzone { border: 3px dashed #cbd5e1; padding: 40px; border-radius: 12px; }
+    .dropzone { border: 3px dashed #cbd5e1; padding: 36px; border-radius: 12px; }
     .file-item { background: white; border: 1px solid #e5e7eb; padding: 10px; border-radius: 8px; display:flex; align-items:center; gap:10px }
     .file-name { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
     .grabbable { cursor: grab }
@@ -23,7 +23,7 @@ NOTE: Merging PPTX client-side in the browser is not reliable. This frontend sen
   <div class="max-w-4xl w-full">
     <div class="bg-white p-6 rounded-xl shadow">
       <h1 class="text-2xl font-semibold mb-3">PPT / PPTX Merger</h1>
-      <p class="text-sm text-gray-600 mb-4">Drag & drop multiple <code>.ppt</code> or <code>.pptx</code> files below, reorder them, then click <strong>Merge</strong>. The frontend uploads files to a server endpoint <code>/merge</code> which returns the merged PPTX.</p>
+      <p class="text-sm text-gray-600 mb-4">Drag & drop multiple <code>.ppt</code> or <code>.pptx</code> files below, reorder them, then click <strong>Merge</strong>. The frontend uploads files to a server endpoint <code>/merge</code> which returns the merged PPTX for download.</p>
 
       <div id="dropzone" class="dropzone mb-4 text-center" tabindex="0">
         <p class="text-gray-700">Drop files here or <label for="fileInput" class="text-blue-600 underline cursor-pointer">browse</label></p>
@@ -31,8 +31,11 @@ NOTE: Merging PPTX client-side in the browser is not reliable. This frontend sen
       </div>
 
       <div class="mb-4">
-        <h2 class="font-medium mb-2">Files (drag to reorder)</h2>
-        <div id="fileList" class="space-y-2">
+        <div class="flex justify-between items-end mb-2">
+          <h2 class="font-medium">Files (drag to reorder)</h2>
+          <div class="text-sm text-gray-600">Count: <span id="fileCount">0</span> • Total size: <span id="totalSize">0 B</span></div>
+        </div>
+        <div id="fileList" class="space-y-2 max-h-64 overflow-auto">
           <!-- populated by JS -->
         </div>
       </div>
@@ -40,7 +43,8 @@ NOTE: Merging PPTX client-side in the browser is not reliable. This frontend sen
       <div class="flex gap-3">
         <button id="mergeBtn" class="px-4 py-2 bg-blue-600 text-white rounded hover:opacity-95">Merge</button>
         <button id="clearBtn" class="px-4 py-2 bg-gray-200 rounded">Clear</button>
-        <div id="status" class="ml-auto text-sm text-gray-600 self-center"></div>
+        <button id="downloadBtn" class="px-4 py-2 bg-green-600 text-white rounded ml-auto" style="display:none">Download Merged</button>
+        <div id="status" class="ml-3 text-sm text-gray-600 self-center"></div>
       </div>
 
       <div class="mt-4 text-xs text-gray-500">Important: this demo requires a server endpoint <code>/merge</code> (POST) that accepts multipart/form-data named <code>files[]</code> and returns a merged PPTX file as binary response with header <code>Content-Disposition</code>.</div>
@@ -55,16 +59,28 @@ NOTE: Merging PPTX client-side in the browser is not reliable. This frontend sen
     const fileList = document.getElementById('fileList');
     const mergeBtn = document.getElementById('mergeBtn');
     const clearBtn = document.getElementById('clearBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
     const status = document.getElementById('status');
+    const fileCountEl = document.getElementById('fileCount');
+    const totalSizeEl = document.getElementById('totalSize');
 
     // internal array of File objects
     const filesArr = [];
+    // keep the last merged blob for download
+    let mergedBlob = null;
+    let mergedFilename = 'merged.pptx';
 
     function bytesToSize(bytes) {
       const sizes = ['B','KB','MB','GB','TB'];
       if (bytes === 0) return '0 B';
       const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)), 10);
       return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+    }
+
+    function updateStats() {
+      fileCountEl.textContent = filesArr.length;
+      const total = filesArr.reduce((s,f) => s + (f.size || 0), 0);
+      totalSizeEl.textContent = bytesToSize(total);
     }
 
     function renderFiles() {
@@ -76,8 +92,8 @@ NOTE: Merging PPTX client-side in the browser is not reliable. This frontend sen
         el.dataset.index = idx;
 
         el.innerHTML = `
-          <div class="mr-2">⠿</div>
-          <div class="file-name" title="${f.name}">${f.name} <span class="text-xs text-gray-400">(${bytesToSize(f.size)})</span></div>
+          <div class="mr-2 text-gray-400">⠿</div>
+          <div class="file-name" title="${f.name}">${idx+1}. ${f.name} <span class="text-xs text-gray-400">(${bytesToSize(f.size)})</span></div>
           <div class="text-sm text-gray-500">${f.type || 'application/vnd.ms-powerpoint'}</div>
           <button class="removeBtn ml-3 px-2 py-1 rounded text-sm bg-red-100">Remove</button>
         `;
@@ -86,6 +102,7 @@ NOTE: Merging PPTX client-side in the browser is not reliable. This frontend sen
         removeBtn.addEventListener('click', () => {
           filesArr.splice(idx,1);
           renderFiles();
+          updateStats();
         });
 
         fileList.appendChild(el);
@@ -102,8 +119,11 @@ NOTE: Merging PPTX client-side in the browser is not reliable. This frontend sen
           const moved = filesArr.splice(oldIndex,1)[0];
           filesArr.splice(newIndex,0,moved);
           renderFiles();
+          updateStats();
         }
       });
+
+      updateStats();
     }
 
     function addFiles(list) {
@@ -116,6 +136,7 @@ NOTE: Merging PPTX client-side in the browser is not reliable. This frontend sen
         filesArr.push(f);
       }
       renderFiles();
+      updateStats();
     }
 
     // drag/drop events
@@ -132,13 +153,24 @@ NOTE: Merging PPTX client-side in the browser is not reliable. This frontend sen
     // open file dialog on click
     dropzone.addEventListener('click', () => fileInput.click());
 
-    clearBtn.addEventListener('click', () => { filesArr.length = 0; renderFiles(); status.textContent = ''; });
+    clearBtn.addEventListener('click', () => { filesArr.length = 0; renderFiles(); status.textContent = ''; mergedBlob = null; downloadBtn.style.display = 'none'; status.textContent = 'Cleared.'; });
+
+    downloadBtn.addEventListener('click', () => {
+      if (!mergedBlob) return;
+      const url = URL.createObjectURL(mergedBlob);
+      const a = document.createElement('a');
+      a.href = url; a.download = mergedFilename; document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+      status.textContent = 'Downloaded: ' + mergedFilename;
+    });
 
     mergeBtn.addEventListener('click', async () => {
       if (!filesArr.length) { alert('No files to merge'); return; }
 
       status.textContent = 'Uploading & merging...';
       mergeBtn.disabled = true;
+      downloadBtn.style.display = 'none';
+      mergedBlob = null;
 
       const form = new FormData();
       filesArr.forEach((f,i) => form.append('files[]', f, f.name));
@@ -156,18 +188,20 @@ NOTE: Merging PPTX client-side in the browser is not reliable. This frontend sen
 
         const blob = await resp.blob();
         // try to extract filename from headers
-        let filename = 'merged.pptx';
+        mergedFilename = 'merged.pptx';
         const disposition = resp.headers.get('Content-Disposition');
         if (disposition) {
           const match = /filename="?([^";]+)"?/.exec(disposition);
-          if (match) filename = match[1];
+          if (match) mergedFilename = match[1];
         }
 
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
-        URL.revokeObjectURL(url);
-        status.textContent = 'Merged file downloaded: ' + filename;
+        mergedBlob = blob;
+        downloadBtn.style.display = 'inline-block';
+        status.textContent = 'Merged ready — click "Download Merged" to save (' + mergedFilename + ')';
+
+        // optionally auto-download:
+        // const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = mergedFilename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+
       } catch (err) {
         console.error(err);
         status.textContent = 'Error: ' + err.message;
@@ -200,24 +234,24 @@ NOTE: Merging PPTX client-side in the browser is not reliable. This frontend sen
   # server.py
   from flask import Flask, request, send_file, abort
   from pptx import Presentation
-  from pptx.util import Inches
   import io
-  import tempfile
-  import os
 
   app = Flask(__name__)
 
   def append_slides(pres_to, pres_from):
       # This approach clones slide XML elements from pres_from into pres_to
+      # It works for many presentations but may not handle every embedded object.
       for slide in pres_from.slides:
           blank_slide_layout = pres_to.slide_layouts[6] if len(pres_to.slide_layouts) > 6 else pres_to.slide_layouts[0]
           new_slide = pres_to.slides.add_slide(blank_slide_layout)
-          # deep copy slide elements
           for shape in slide.shapes:
-              el = shape.element
-              new_el = el.clone()
-              new_slide.shapes._spTree.insert_element_before(new_el, 'p:extLst')
-  
+              try:
+                  new_el = shape.element.clone()
+                  new_slide.shapes._spTree.insert_element_before(new_el, 'p:extLst')
+              except Exception:
+                  # if a shape can't be cloned this is a best-effort merge
+                  pass
+
   @app.route('/merge', methods=['POST'])
   def merge():
       if 'files[]' not in request.files:
@@ -226,13 +260,11 @@ NOTE: Merging PPTX client-side in the browser is not reliable. This frontend sen
       if not files:
           return 'No files uploaded', 400
 
-      # create a base presentation from first file
       try:
           first = files[0]
           first_stream = io.BytesIO(first.read())
           merged = Presentation(first_stream)
 
-          # append slides from remaining
           for f in files[1:]:
               data = io.BytesIO(f.read())
               pres = Presentation(data)
@@ -247,7 +279,6 @@ NOTE: Merging PPTX client-side in the browser is not reliable. This frontend sen
           return str(e), 500
 
   if __name__ == '__main__':
-      # run on port 5000
       app.run(host='0.0.0.0', port=5000, debug=True)
   </pre>
 
@@ -265,4 +296,3 @@ NOTE: Merging PPTX client-side in the browser is not reliable. This frontend sen
 
 </body>
 </html>
-
