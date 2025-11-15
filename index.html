@@ -1,1 +1,268 @@
+<!--
+Filename: index.html
+Description: Single-file frontend that lets you drag & drop multiple .ppt/.pptx files, reorder them (drag to reorder), and POSTs them to a server endpoint /merge to create a single merged PPTX.
+
+NOTE: Merging PPTX client-side in the browser is not reliable. This frontend sends files to a server which performs the actual merge. A sample Python Flask server (server.py) using python-pptx is included below the HTML in this document.
+-->
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PPT/PPTX Merger</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    .dropzone { border: 3px dashed #cbd5e1; padding: 40px; border-radius: 12px; }
+    .file-item { background: white; border: 1px solid #e5e7eb; padding: 10px; border-radius: 8px; display:flex; align-items:center; gap:10px }
+    .file-name { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+    .grabbable { cursor: grab }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-6">
+  <div class="max-w-4xl w-full">
+    <div class="bg-white p-6 rounded-xl shadow">
+      <h1 class="text-2xl font-semibold mb-3">PPT / PPTX Merger</h1>
+      <p class="text-sm text-gray-600 mb-4">Drag & drop multiple <code>.ppt</code> or <code>.pptx</code> files below, reorder them, then click <strong>Merge</strong>. The frontend uploads files to a server endpoint <code>/merge</code> which returns the merged PPTX.</p>
+
+      <div id="dropzone" class="dropzone mb-4 text-center" tabindex="0">
+        <p class="text-gray-700">Drop files here or <label for="fileInput" class="text-blue-600 underline cursor-pointer">browse</label></p>
+        <input id="fileInput" type="file" accept=".ppt,.pptx" multiple style="display:none">
+      </div>
+
+      <div class="mb-4">
+        <h2 class="font-medium mb-2">Files (drag to reorder)</h2>
+        <div id="fileList" class="space-y-2">
+          <!-- populated by JS -->
+        </div>
+      </div>
+
+      <div class="flex gap-3">
+        <button id="mergeBtn" class="px-4 py-2 bg-blue-600 text-white rounded hover:opacity-95">Merge</button>
+        <button id="clearBtn" class="px-4 py-2 bg-gray-200 rounded">Clear</button>
+        <div id="status" class="ml-auto text-sm text-gray-600 self-center"></div>
+      </div>
+
+      <div class="mt-4 text-xs text-gray-500">Important: this demo requires a server endpoint <code>/merge</code> (POST) that accepts multipart/form-data named <code>files[]</code> and returns a merged PPTX file as binary response with header <code>Content-Disposition</code>.</div>
+    </div>
+  </div>
+
+  <!-- SortableJS to allow drag reorder -->
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+  <script>
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const fileList = document.getElementById('fileList');
+    const mergeBtn = document.getElementById('mergeBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const status = document.getElementById('status');
+
+    // internal array of File objects
+    const filesArr = [];
+
+    function bytesToSize(bytes) {
+      const sizes = ['B','KB','MB','GB','TB'];
+      if (bytes === 0) return '0 B';
+      const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)), 10);
+      return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+    }
+
+    function renderFiles() {
+      fileList.innerHTML = '';
+      filesArr.forEach((f, idx) => {
+        const el = document.createElement('div');
+        el.className = 'file-item grabbable';
+        el.draggable = true;
+        el.dataset.index = idx;
+
+        el.innerHTML = `
+          <div class="mr-2">⠿</div>
+          <div class="file-name" title="${f.name}">${f.name} <span class="text-xs text-gray-400">(${bytesToSize(f.size)})</span></div>
+          <div class="text-sm text-gray-500">${f.type || 'application/vnd.ms-powerpoint'}</div>
+          <button class="removeBtn ml-3 px-2 py-1 rounded text-sm bg-red-100">Remove</button>
+        `;
+
+        const removeBtn = el.querySelector('.removeBtn');
+        removeBtn.addEventListener('click', () => {
+          filesArr.splice(idx,1);
+          renderFiles();
+        });
+
+        fileList.appendChild(el);
+      });
+
+      // enable Sortable
+      Sortable.create(fileList, {
+        handle: '.grabbable',
+        animation: 150,
+        onEnd: function (evt) {
+          const oldIndex = evt.oldIndex;
+          const newIndex = evt.newIndex;
+          if (oldIndex === newIndex) return;
+          const moved = filesArr.splice(oldIndex,1)[0];
+          filesArr.splice(newIndex,0,moved);
+          renderFiles();
+        }
+      });
+    }
+
+    function addFiles(list) {
+      for (const f of list) {
+        const ext = f.name.split('.').pop().toLowerCase();
+        if (ext !== 'ppt' && ext !== 'pptx') {
+          alert('Only .ppt and .pptx files allowed: ' + f.name);
+          continue;
+        }
+        filesArr.push(f);
+      }
+      renderFiles();
+    }
+
+    // drag/drop events
+    dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('ring-2','ring-blue-300'); });
+    dropzone.addEventListener('dragleave', () => { dropzone.classList.remove('ring-2','ring-blue-300'); });
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault(); dropzone.classList.remove('ring-2','ring-blue-300');
+      if (e.dataTransfer.files && e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
+    });
+
+    // file input
+    fileInput.addEventListener('change', (e) => { addFiles(e.target.files); fileInput.value = ''; });
+
+    // open file dialog on click
+    dropzone.addEventListener('click', () => fileInput.click());
+
+    clearBtn.addEventListener('click', () => { filesArr.length = 0; renderFiles(); status.textContent = ''; });
+
+    mergeBtn.addEventListener('click', async () => {
+      if (!filesArr.length) { alert('No files to merge'); return; }
+
+      status.textContent = 'Uploading & merging...';
+      mergeBtn.disabled = true;
+
+      const form = new FormData();
+      filesArr.forEach((f,i) => form.append('files[]', f, f.name));
+
+      try {
+        const resp = await fetch('/merge', {
+          method: 'POST',
+          body: form
+        });
+
+        if (!resp.ok) {
+          const text = await resp.text();
+          throw new Error('Server error: ' + text);
+        }
+
+        const blob = await resp.blob();
+        // try to extract filename from headers
+        let filename = 'merged.pptx';
+        const disposition = resp.headers.get('Content-Disposition');
+        if (disposition) {
+          const match = /filename="?([^";]+)"?/.exec(disposition);
+          if (match) filename = match[1];
+        }
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+        URL.revokeObjectURL(url);
+        status.textContent = 'Merged file downloaded: ' + filename;
+      } catch (err) {
+        console.error(err);
+        status.textContent = 'Error: ' + err.message;
+        alert('Merge failed: ' + err.message);
+      } finally {
+        mergeBtn.disabled = false;
+      }
+    });
+
+    // initial render
+    renderFiles();
+  </script>
+
+
+  <!--
+  --------------------
+  Sample server implementation (Python Flask) - save as server.py
+  --------------------
+
+  This server accepts POST /merge with multipart/form-data files[] and returns merged PPTX.
+  Requirements:
+    pip install flask python-pptx lxml werkzeug
+
+  Run: python server.py
+
+  NOTE: Merging pptx reliably requires copying slide XML and relationships. The code below is a commonly used approach that copies the slide XML elements. It handles many PPTX, but there may be edge-cases (embedded media, complex slide masters). For production, sanitize inputs and add security checks.
+  -->
+
+  <pre style="display:none">
+  # server.py
+  from flask import Flask, request, send_file, abort
+  from pptx import Presentation
+  from pptx.util import Inches
+  import io
+  import tempfile
+  import os
+
+  app = Flask(__name__)
+
+  def append_slides(pres_to, pres_from):
+      # This approach clones slide XML elements from pres_from into pres_to
+      for slide in pres_from.slides:
+          blank_slide_layout = pres_to.slide_layouts[6] if len(pres_to.slide_layouts) > 6 else pres_to.slide_layouts[0]
+          new_slide = pres_to.slides.add_slide(blank_slide_layout)
+          # deep copy slide elements
+          for shape in slide.shapes:
+              el = shape.element
+              new_el = el.clone()
+              new_slide.shapes._spTree.insert_element_before(new_el, 'p:extLst')
+  
+  @app.route('/merge', methods=['POST'])
+  def merge():
+      if 'files[]' not in request.files:
+          return 'No files[] part', 400
+      files = request.files.getlist('files[]')
+      if not files:
+          return 'No files uploaded', 400
+
+      # create a base presentation from first file
+      try:
+          first = files[0]
+          first_stream = io.BytesIO(first.read())
+          merged = Presentation(first_stream)
+
+          # append slides from remaining
+          for f in files[1:]:
+              data = io.BytesIO(f.read())
+              pres = Presentation(data)
+              append_slides(merged, pres)
+
+          out_stream = io.BytesIO()
+          merged.save(out_stream)
+          out_stream.seek(0)
+
+          return send_file(out_stream, mimetype='application/vnd.openxmlformats-officedocument.presentationml.presentation', as_attachment=True, download_name='merged.pptx')
+      except Exception as e:
+          return str(e), 500
+
+  if __name__ == '__main__':
+      # run on port 5000
+      app.run(host='0.0.0.0', port=5000, debug=True)
+  </pre>
+
+  <!--
+  Notes & next steps:
+   - Save the top part as index.html and open it in your browser.
+   - Run the Flask server (server.py) on the same machine or host the files; the frontend calls /merge relative to the page origin. If hosting index.html via file://, update the fetch URL to include full server URL (e.g., http://localhost:5000/merge) and ensure CORS is enabled.
+   - For CORS, you may add `from flask_cors import CORS; CORS(app)` and `pip install flask-cors`.
+   - The Python merging code uses a simple cloning strategy; for very complex presentations (embedded media, charts, etc.) you may need a more robust merging strategy.
+
+  If you'd like, I can also provide:
+   - A Node.js (Express) server example that calls a Python microservice for merging.
+   - A pure-server hosted single page (index + server combined) ready to deploy to a VPS or Heroku.
+  -->
+
+</body>
+</html>
 
