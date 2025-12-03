@@ -1,298 +1,456 @@
-<!--
-Filename: index.html
-Description: Single-file frontend that lets you drag & drop multiple .ppt/.pptx files, reorder them (drag to reorder), shows count and total size, and POSTs them to a server endpoint /merge to create a single merged PPTX which is then downloaded.
-
-Server: A sample Python Flask server (server.py) using python-pptx is included below the HTML in this document.
--->
-
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>PPT/PPTX Merger</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <title>Water Bottle Puzzle (8L,5L,3L)</title>
   <style>
-    .dropzone { border: 3px dashed #cbd5e1; padding: 36px; border-radius: 12px; }
-    .file-item { background: white; border: 1px solid #e5e7eb; padding: 10px; border-radius: 8px; display:flex; align-items:center; gap:10px }
-    .file-name { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
-    .grabbable { cursor: grab }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at top, #222 0, #05060a 60%);
+      color: #f7f7f7;
+    }
+
+    .game-container {
+      width: min(900px, 95vw);
+      padding: 24px;
+      border-radius: 20px;
+      background: rgba(15, 15, 25, 0.9);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .title {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      font-size: 0.9rem;
+      color: #a8b3cf;
+      margin-top: 4px;
+    }
+
+    .stats {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      font-size: 0.9rem;
+    }
+
+    .pill {
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.02);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pill span.label {
+      color: #a3aed0;
+      font-size: 0.8rem;
+    }
+
+    .pill span.value {
+      font-weight: 600;
+    }
+
+    .btn {
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: linear-gradient(135deg, #273c75, #192a56);
+      color: #fff;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
+      background: linear-gradient(135deg, #4070f4, #273c75);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    .bottles-area {
+      margin-top: 12px;
+      display: flex;
+      justify-content: space-around;
+      gap: 18px;
+      padding: 18px 12px 6px;
+      border-radius: 16px;
+      background: radial-gradient(circle at top, #111627 0, #050814 70%);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .bottle-wrapper {
+      flex: 1;
+      max-width: 220px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .bottle-label {
+      font-weight: 600;
+      font-size: 0.95rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #d1d9ff;
+    }
+
+    .bottle {
+      position: relative;
+      width: 80px;
+      height: 180px;
+      border-radius: 30px 30px 18px 18px;
+      border: 2px solid rgba(255, 255, 255, 0.35);
+      background: linear-gradient(160deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.01));
+      overflow: hidden;
+      box-shadow: 0 10px 18px rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+
+    .bottle::before {
+      /* Bottle neck */
+      content: "";
+      position: absolute;
+      top: -18px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 30px;
+      height: 20px;
+      border-radius: 10px 10px 4px 4px;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      border-bottom: none;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(210, 220, 255, 0.15));
+    }
+
+    .bottle.selected {
+      border-color: #00e0ff;
+      box-shadow: 0 0 20px rgba(0, 224, 255, 0.6);
+      transform: translateY(-4px) scale(1.02);
+    }
+
+    .bottle-target {
+      outline: 2px dashed rgba(0, 224, 255, 0.4);
+      outline-offset: 4px;
+    }
+
+    .water {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 0;
+      background: linear-gradient(180deg, rgba(0, 199, 255, 0.9), rgba(0, 119, 255, 0.9));
+      box-shadow: 0 0 18px rgba(0, 180, 255, 0.7);
+      transition: height 0.25s ease-in-out;
+    }
+
+    .water::before {
+      /* water highlight */
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 10px;
+      right: 10px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.4);
+      filter: blur(3px);
+      opacity: 0.9;
+    }
+
+    .volume-text {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 0.75rem;
+      background: rgba(0, 0, 0, 0.55);
+      padding: 3px 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .capacity-text {
+      font-size: 0.8rem;
+      color: #9aa4c6;
+    }
+
+    .footer {
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px dashed rgba(255, 255, 255, 0.15);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.86rem;
+    }
+
+    .message {
+      color: #a8b3cf;
+    }
+
+    .message.win {
+      color: #3fe0a8;
+      font-weight: 600;
+    }
+
+    .instructions {
+      color: #848fb3;
+      max-width: 460px;
+      line-height: 1.4;
+    }
+
+    @media (max-width: 650px) {
+      .bottles-area {
+        flex-direction: row;
+      }
+      .bottle {
+        height: 150px;
+        width: 70px;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .footer {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .bottles-area {
+        gap: 10px;
+      }
+    }
   </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center p-6">
-  <div class="max-w-4xl w-full">
-    <div class="bg-white p-6 rounded-xl shadow">
-      <h1 class="text-2xl font-semibold mb-3">PPT / PPTX Merger</h1>
-      <p class="text-sm text-gray-600 mb-4">Drag & drop multiple <code>.ppt</code> or <code>.pptx</code> files below, reorder them, then click <strong>Merge</strong>. The frontend uploads files to a server endpoint <code>/merge</code> which returns the merged PPTX for download.</p>
-
-      <div id="dropzone" class="dropzone mb-4 text-center" tabindex="0">
-        <p class="text-gray-700">Drop files here or <label for="fileInput" class="text-blue-600 underline cursor-pointer">browse</label></p>
-        <input id="fileInput" type="file" accept=".ppt,.pptx" multiple style="display:none">
-      </div>
-
-      <div class="mb-4">
-        <div class="flex justify-between items-end mb-2">
-          <h2 class="font-medium">Files (drag to reorder)</h2>
-          <div class="text-sm text-gray-600">Count: <span id="fileCount">0</span> • Total size: <span id="totalSize">0 B</span></div>
-        </div>
-        <div id="fileList" class="space-y-2 max-h-64 overflow-auto">
-          <!-- populated by JS -->
+<body>
+  <div class="game-container">
+    <div class="header">
+      <div>
+        <div class="title">3 Bottle Puzzle</div>
+        <div class="subtitle">
+          Goal: Bottle A = 4 L, Bottle B = 4 L, Bottle C = 0 L
         </div>
       </div>
+      <div class="stats">
+        <div class="pill">
+          <span class="label">Moves</span>
+          <span class="value" id="moves">0</span>
+        </div>
+        <button class="btn" id="resetBtn">Reset</button>
+      </div>
+    </div>
 
-      <div class="flex gap-3">
-        <button id="mergeBtn" class="px-4 py-2 bg-blue-600 text-white rounded hover:opacity-95">Merge</button>
-        <button id="clearBtn" class="px-4 py-2 bg-gray-200 rounded">Clear</button>
-        <button id="downloadBtn" class="px-4 py-2 bg-green-600 text-white rounded ml-auto" style="display:none">Download Merged</button>
-        <div id="status" class="ml-3 text-sm text-gray-600 self-center"></div>
+    <div class="bottles-area">
+      <!-- Bottle A -->
+      <div class="bottle-wrapper" data-index="0">
+        <div class="bottle-label">Bottle A</div>
+        <div class="bottle" id="bottle-0">
+          <div class="water" id="water-0"></div>
+          <div class="volume-text" id="volume-0">0 L</div>
+        </div>
+        <div class="capacity-text">Capacity: 8 L</div>
       </div>
 
-      <div class="mt-4 text-xs text-gray-500">Important: this demo requires a server endpoint <code>/merge</code> (POST) that accepts multipart/form-data named <code>files[]</code> and returns a merged PPTX file as binary response with header <code>Content-Disposition</code>.</div>
+      <!-- Bottle B -->
+      <div class="bottle-wrapper" data-index="1">
+        <div class="bottle-label">Bottle B</div>
+        <div class="bottle" id="bottle-1">
+          <div class="water" id="water-1"></div>
+          <div class="volume-text" id="volume-1">0 L</div>
+        </div>
+        <div class="capacity-text">Capacity: 5 L</div>
+      </div>
+
+      <!-- Bottle C -->
+      <div class="bottle-wrapper" data-index="2">
+        <div class="bottle-label">Bottle C</div>
+        <div class="bottle" id="bottle-2">
+          <div class="water" id="water-2"></div>
+          <div class="volume-text" id="volume-2">0 L</div>
+        </div>
+        <div class="capacity-text">Capacity: 3 L</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="instructions">
+        Tap one bottle to select it (source). Then tap another bottle to pour into it.
+        You can’t overfill a bottle — it stops when the destination is full or the source is empty.
+      </div>
+      <div class="message" id="message">
+        Ready! Start from A = 8 L, B = 0 L, C = 0 L.
+      </div>
     </div>
   </div>
 
-  <!-- SortableJS to allow drag reorder -->
-  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
   <script>
-    const dropzone = document.getElementById('dropzone');
-    const fileInput = document.getElementById('fileInput');
-    const fileList = document.getElementById('fileList');
-    const mergeBtn = document.getElementById('mergeBtn');
-    const clearBtn = document.getElementById('clearBtn');
-    const downloadBtn = document.getElementById('downloadBtn');
-    const status = document.getElementById('status');
-    const fileCountEl = document.getElementById('fileCount');
-    const totalSizeEl = document.getElementById('totalSize');
+    // Capacities for A, B, C
+    const capacities = [8, 5, 3];
 
-    // internal array of File objects
-    const filesArr = [];
-    // keep the last merged blob for download
-    let mergedBlob = null;
-    let mergedFilename = 'merged.pptx';
+    // Current volumes
+    let volumes = [8, 0, 0];
 
-    function bytesToSize(bytes) {
-      const sizes = ['B','KB','MB','GB','TB'];
-      if (bytes === 0) return '0 B';
-      const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)), 10);
-      return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
-    }
+    // Goal state
+    const goal = [4, 4, 0];
 
-    function updateStats() {
-      fileCountEl.textContent = filesArr.length;
-      const total = filesArr.reduce((s,f) => s + (f.size || 0), 0);
-      totalSizeEl.textContent = bytesToSize(total);
-    }
+    // Selection and moves
+    let selectedIndex = null;
+    let moves = 0;
 
-    function renderFiles() {
-      fileList.innerHTML = '';
-      filesArr.forEach((f, idx) => {
-        const el = document.createElement('div');
-        el.className = 'file-item grabbable';
-        el.draggable = true;
-        el.dataset.index = idx;
+    const moveElem = document.getElementById("moves");
+    const messageElem = document.getElementById("message");
 
-        el.innerHTML = `
-          <div class="mr-2 text-gray-400">⠿</div>
-          <div class="file-name" title="${f.name}">${idx+1}. ${f.name} <span class="text-xs text-gray-400">(${bytesToSize(f.size)})</span></div>
-          <div class="text-sm text-gray-500">${f.type || 'application/vnd.ms-powerpoint'}</div>
-          <button class="removeBtn ml-3 px-2 py-1 rounded text-sm bg-red-100">Remove</button>
-        `;
+    function updateUI() {
+      volumes.forEach((vol, i) => {
+        const water = document.getElementById("water-" + i);
+        const volumeText = document.getElementById("volume-" + i);
+        const bottle = document.getElementById("bottle-" + i);
 
-        const removeBtn = el.querySelector('.removeBtn');
-        removeBtn.addEventListener('click', () => {
-          filesArr.splice(idx,1);
-          renderFiles();
-          updateStats();
-        });
+        const capacity = capacities[i];
+        const percent = (vol / capacity) * 100;
+        water.style.height = percent + "%";
+        volumeText.textContent = vol + " L";
 
-        fileList.appendChild(el);
+        // remove target outline
+        bottle.classList.remove("bottle-target");
       });
 
-      // enable Sortable
-      Sortable.create(fileList, {
-        handle: '.grabbable',
-        animation: 150,
-        onEnd: function (evt) {
-          const oldIndex = evt.oldIndex;
-          const newIndex = evt.newIndex;
-          if (oldIndex === newIndex) return;
-          const moved = filesArr.splice(oldIndex,1)[0];
-          filesArr.splice(newIndex,0,moved);
-          renderFiles();
-          updateStats();
-        }
-      });
+      moveElem.textContent = moves.toString();
 
-      updateStats();
-    }
-
-    function addFiles(list) {
-      for (const f of list) {
-        const ext = f.name.split('.').pop().toLowerCase();
-        if (ext !== 'ppt' && ext !== 'pptx') {
-          alert('Only .ppt and .pptx files allowed: ' + f.name);
-          continue;
+      if (isGoalReached()) {
+        messageElem.textContent = "Nice! You reached 4 L, 4 L, 0 L 🎉";
+        messageElem.classList.add("win");
+      } else {
+        messageElem.classList.remove("win");
+        if (selectedIndex !== null) {
+          messageElem.textContent = `Selected Bottle ${["A", "B", "C"][selectedIndex]} – now tap a bottle to pour into.`;
+        } else {
+          messageElem.textContent = "Tap a bottle to select it, then tap another to pour.";
         }
-        filesArr.push(f);
       }
-      renderFiles();
-      updateStats();
     }
 
-    // drag/drop events
-    dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('ring-2','ring-blue-300'); });
-    dropzone.addEventListener('dragleave', () => { dropzone.classList.remove('ring-2','ring-blue-300'); });
-    dropzone.addEventListener('drop', (e) => {
-      e.preventDefault(); dropzone.classList.remove('ring-2','ring-blue-300');
-      if (e.dataTransfer.files && e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
-    });
+    function isGoalReached() {
+      return volumes[0] === goal[0] &&
+             volumes[1] === goal[1] &&
+             volumes[2] === goal[2];
+    }
 
-    // file input
-    fileInput.addEventListener('change', (e) => { addFiles(e.target.files); fileInput.value = ''; });
+    function resetGame() {
+      volumes = [8, 0, 0];
+      moves = 0;
+      clearSelection();
+      updateUI();
+    }
 
-    // open file dialog on click
-    dropzone.addEventListener('click', () => fileInput.click());
+    function clearSelection() {
+      selectedIndex = null;
+      document.querySelectorAll(".bottle").forEach(b => {
+        b.classList.remove("selected", "bottle-target");
+      });
+    }
 
-    clearBtn.addEventListener('click', () => { filesArr.length = 0; renderFiles(); status.textContent = ''; mergedBlob = null; downloadBtn.style.display = 'none'; status.textContent = 'Cleared.'; });
+    function selectBottle(index) {
+      const bottleElem = document.getElementById("bottle-" + index);
 
-    downloadBtn.addEventListener('click', () => {
-      if (!mergedBlob) return;
-      const url = URL.createObjectURL(mergedBlob);
-      const a = document.createElement('a');
-      a.href = url; a.download = mergedFilename; document.body.appendChild(a); a.click(); a.remove();
-      URL.revokeObjectURL(url);
-      status.textContent = 'Downloaded: ' + mergedFilename;
-    });
+      // If nothing selected yet
+      if (selectedIndex === null) {
+        selectedIndex = index;
+        bottleElem.classList.add("selected");
 
-    mergeBtn.addEventListener('click', async () => {
-      if (!filesArr.length) { alert('No files to merge'); return; }
-
-      status.textContent = 'Uploading & merging...';
-      mergeBtn.disabled = true;
-      downloadBtn.style.display = 'none';
-      mergedBlob = null;
-
-      const form = new FormData();
-      filesArr.forEach((f,i) => form.append('files[]', f, f.name));
-
-      try {
-        const resp = await fetch('/merge', {
-          method: 'POST',
-          body: form
+        // highlight possible targets
+        document.querySelectorAll(".bottle").forEach((b, i) => {
+          if (i !== index) b.classList.add("bottle-target");
         });
 
-        if (!resp.ok) {
-          const text = await resp.text();
-          throw new Error('Server error: ' + text);
-        }
-
-        const blob = await resp.blob();
-        // try to extract filename from headers
-        mergedFilename = 'merged.pptx';
-        const disposition = resp.headers.get('Content-Disposition');
-        if (disposition) {
-          const match = /filename="?([^";]+)"?/.exec(disposition);
-          if (match) mergedFilename = match[1];
-        }
-
-        mergedBlob = blob;
-        downloadBtn.style.display = 'inline-block';
-        status.textContent = 'Merged ready — click "Download Merged" to save (' + mergedFilename + ')';
-
-        // optionally auto-download:
-        // const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = mergedFilename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-
-      } catch (err) {
-        console.error(err);
-        status.textContent = 'Error: ' + err.message;
-        alert('Merge failed: ' + err.message);
-      } finally {
-        mergeBtn.disabled = false;
+        updateUI();
+        return;
       }
+
+      // If clicked the same bottle -> deselect
+      if (selectedIndex === index) {
+        clearSelection();
+        updateUI();
+        return;
+      }
+
+      // Now we have a source (selectedIndex) and destination (index)
+      const source = selectedIndex;
+      const dest = index;
+
+      const amountSourceHas = volumes[source];
+      const destSpace = capacities[dest] - volumes[dest];
+
+      if (amountSourceHas === 0 || destSpace === 0) {
+        // nothing changes, but we can move selection to new bottle as source
+        clearSelection();
+        selectBottle(index);
+        return;
+      }
+
+      const pourAmount = Math.min(amountSourceHas, destSpace);
+
+      volumes[source] -= pourAmount;
+      volumes[dest] += pourAmount;
+      moves += 1;
+
+      clearSelection();
+      updateUI();
+    }
+
+    // Event listeners for bottle clicks
+    document.querySelectorAll(".bottle-wrapper").forEach(wrapper => {
+      wrapper.addEventListener("click", () => {
+        const idx = parseInt(wrapper.getAttribute("data-index"), 10);
+        selectBottle(idx);
+      });
     });
 
-    // initial render
-    renderFiles();
+    // Reset button
+    document.getElementById("resetBtn").addEventListener("click", resetGame);
+
+    // Initial render
+    updateUI();
   </script>
-
-
-  <!--
-  --------------------
-  Sample server implementation (Python Flask) - save as server.py
-  --------------------
-
-  This server accepts POST /merge with multipart/form-data files[] and returns merged PPTX.
-  Requirements:
-    pip install flask python-pptx lxml werkzeug
-
-  Run: python server.py
-
-  NOTE: Merging pptx reliably requires copying slide XML and relationships. The code below is a commonly used approach that copies the slide XML elements. It handles many PPTX, but there may be edge-cases (embedded media, complex slide masters). For production, sanitize inputs and add security checks.
-  -->
-
-  <pre style="display:none">
-  # server.py
-  from flask import Flask, request, send_file, abort
-  from pptx import Presentation
-  import io
-
-  app = Flask(__name__)
-
-  def append_slides(pres_to, pres_from):
-      # This approach clones slide XML elements from pres_from into pres_to
-      # It works for many presentations but may not handle every embedded object.
-      for slide in pres_from.slides:
-          blank_slide_layout = pres_to.slide_layouts[6] if len(pres_to.slide_layouts) > 6 else pres_to.slide_layouts[0]
-          new_slide = pres_to.slides.add_slide(blank_slide_layout)
-          for shape in slide.shapes:
-              try:
-                  new_el = shape.element.clone()
-                  new_slide.shapes._spTree.insert_element_before(new_el, 'p:extLst')
-              except Exception:
-                  # if a shape can't be cloned this is a best-effort merge
-                  pass
-
-  @app.route('/merge', methods=['POST'])
-  def merge():
-      if 'files[]' not in request.files:
-          return 'No files[] part', 400
-      files = request.files.getlist('files[]')
-      if not files:
-          return 'No files uploaded', 400
-
-      try:
-          first = files[0]
-          first_stream = io.BytesIO(first.read())
-          merged = Presentation(first_stream)
-
-          for f in files[1:]:
-              data = io.BytesIO(f.read())
-              pres = Presentation(data)
-              append_slides(merged, pres)
-
-          out_stream = io.BytesIO()
-          merged.save(out_stream)
-          out_stream.seek(0)
-
-          return send_file(out_stream, mimetype='application/vnd.openxmlformats-officedocument.presentationml.presentation', as_attachment=True, download_name='merged.pptx')
-      except Exception as e:
-          return str(e), 500
-
-  if __name__ == '__main__':
-      app.run(host='0.0.0.0', port=5000, debug=True)
-  </pre>
-
-  <!--
-  Notes & next steps:
-   - Save the top part as index.html and open it in your browser.
-   - Run the Flask server (server.py) on the same machine or host the files; the frontend calls /merge relative to the page origin. If hosting index.html via file://, update the fetch URL to include full server URL (e.g., http://localhost:5000/merge) and ensure CORS is enabled.
-   - For CORS, you may add `from flask_cors import CORS; CORS(app)` and `pip install flask-cors`.
-   - The Python merging code uses a simple cloning strategy; for very complex presentations (embedded media, charts, etc.) you may need a more robust merging strategy.
-
-  If you'd like, I can also provide:
-   - A Node.js (Express) server example that calls a Python microservice for merging.
-   - A pure-server hosted single page (index + server combined) ready to deploy to a VPS or Heroku.
-  -->
-
 </body>
 </html>
