@@ -2,455 +2,328 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Water Bottle Puzzle (8L,5L,3L)</title>
+  <title>Mini City Sandbox (WASD + Mouse + Shift + Space)</title>
   <style>
-    * {
-      box-sizing: border-box;
+    html, body {
       margin: 0;
       padding: 0;
+      overflow: hidden;
+      height: 100%;
+      background: #000;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
-
-    body {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: radial-gradient(circle at top, #222 0, #05060a 60%);
-      color: #f7f7f7;
-    }
-
-    .game-container {
-      width: min(900px, 95vw);
-      padding: 24px;
-      border-radius: 20px;
-      background: rgba(15, 15, 25, 0.9);
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .header {
-      display: flex;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 18px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-
-    .title {
-      font-size: 1.5rem;
-      font-weight: 700;
-    }
-
-    .subtitle {
-      font-size: 0.9rem;
-      color: #a8b3cf;
-      margin-top: 4px;
-    }
-
-    .stats {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      font-size: 0.9rem;
-    }
-
-    .pill {
-      padding: 4px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      background: rgba(255, 255, 255, 0.02);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .pill span.label {
-      color: #a3aed0;
-      font-size: 0.8rem;
-    }
-
-    .pill span.value {
-      font-weight: 600;
-    }
-
-    .btn {
-      padding: 6px 12px;
-      border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      background: linear-gradient(135deg, #273c75, #192a56);
-      color: #fff;
-      cursor: pointer;
-      font-size: 0.85rem;
-      font-weight: 500;
-      transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.15s ease;
-      white-space: nowrap;
-    }
-
-    .btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
-      background: linear-gradient(135deg, #4070f4, #273c75);
-    }
-
-    .btn:active {
-      transform: translateY(0);
-      box-shadow: none;
-    }
-
-    .bottles-area {
-      margin-top: 12px;
-      display: flex;
-      justify-content: space-around;
-      gap: 18px;
-      padding: 18px 12px 6px;
-      border-radius: 16px;
-      background: radial-gradient(circle at top, #111627 0, #050814 70%);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-    }
-
-    .bottle-wrapper {
-      flex: 1;
-      max-width: 220px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      cursor: pointer;
-      user-select: none;
-    }
-
-    .bottle-label {
-      font-weight: 600;
-      font-size: 0.95rem;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: #d1d9ff;
-    }
-
-    .bottle {
-      position: relative;
-      width: 80px;
-      height: 180px;
-      border-radius: 30px 30px 18px 18px;
-      border: 2px solid rgba(255, 255, 255, 0.35);
-      background: linear-gradient(160deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.01));
-      overflow: hidden;
-      box-shadow: 0 10px 18px rgba(0, 0, 0, 0.7);
-      display: flex;
-      align-items: flex-end;
-      justify-content: center;
-      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-    }
-
-    .bottle::before {
-      /* Bottle neck */
-      content: "";
-      position: absolute;
-      top: -18px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 30px;
-      height: 20px;
-      border-radius: 10px 10px 4px 4px;
-      border: 2px solid rgba(255, 255, 255, 0.4);
-      border-bottom: none;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(210, 220, 255, 0.15));
-    }
-
-    .bottle.selected {
-      border-color: #00e0ff;
-      box-shadow: 0 0 20px rgba(0, 224, 255, 0.6);
-      transform: translateY(-4px) scale(1.02);
-    }
-
-    .bottle-target {
-      outline: 2px dashed rgba(0, 224, 255, 0.4);
-      outline-offset: 4px;
-    }
-
-    .water {
-      position: absolute;
-      bottom: 0;
-      width: 100%;
-      height: 0;
-      background: linear-gradient(180deg, rgba(0, 199, 255, 0.9), rgba(0, 119, 255, 0.9));
-      box-shadow: 0 0 18px rgba(0, 180, 255, 0.7);
-      transition: height 0.25s ease-in-out;
-    }
-
-    .water::before {
-      /* water highlight */
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 10px;
-      right: 10px;
-      height: 6px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.4);
-      filter: blur(3px);
-      opacity: 0.9;
-    }
-
-    .volume-text {
+    #info {
       position: absolute;
       top: 10px;
-      right: 10px;
-      font-size: 0.75rem;
-      background: rgba(0, 0, 0, 0.55);
-      padding: 3px 6px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #fff;
+      background: rgba(0,0,0,0.6);
+      padding: 8px 14px;
       border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.18);
+      font-size: 13px;
+      z-index: 10;
+      pointer-events: none;
+      text-align: center;
     }
-
-    .capacity-text {
-      font-size: 0.8rem;
-      color: #9aa4c6;
-    }
-
-    .footer {
-      margin-top: 16px;
-      padding-top: 12px;
-      border-top: 1px dashed rgba(255, 255, 255, 0.15);
+    #blocker {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.7);
       display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      justify-content: space-between;
       align-items: center;
-      font-size: 0.86rem;
+      justify-content: center;
+      flex-direction: column;
+      color: #fff;
+      z-index: 9;
     }
-
-    .message {
-      color: #a8b3cf;
+    #instructions {
+      text-align: center;
+      max-width: 520px;
+      cursor: pointer;
     }
-
-    .message.win {
-      color: #3fe0a8;
+    #instructions h1 {
+      margin-bottom: 8px;
+      font-size: 24px;
+    }
+    #instructions p {
+      margin: 4px 0;
+      font-size: 14px;
+      color: #ddd;
+    }
+    #instructions span {
       font-weight: 600;
-    }
-
-    .instructions {
-      color: #848fb3;
-      max-width: 460px;
-      line-height: 1.4;
-    }
-
-    @media (max-width: 650px) {
-      .bottles-area {
-        flex-direction: row;
-      }
-      .bottle {
-        height: 150px;
-        width: 70px;
-      }
-    }
-
-    @media (max-width: 520px) {
-      .header {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .footer {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .bottles-area {
-        gap: 10px;
-      }
+      color: #ffd95e;
     }
   </style>
 </head>
 <body>
-  <div class="game-container">
-    <div class="header">
-      <div>
-        <div class="title">3 Bottle Puzzle</div>
-        <div class="subtitle">
-          Goal: Bottle A = 4 L, Bottle B = 4 L, Bottle C = 0 L
-        </div>
-      </div>
-      <div class="stats">
-        <div class="pill">
-          <span class="label">Moves</span>
-          <span class="value" id="moves">0</span>
-        </div>
-        <button class="btn" id="resetBtn">Reset</button>
-      </div>
-    </div>
-
-    <div class="bottles-area">
-      <!-- Bottle A -->
-      <div class="bottle-wrapper" data-index="0">
-        <div class="bottle-label">Bottle A</div>
-        <div class="bottle" id="bottle-0">
-          <div class="water" id="water-0"></div>
-          <div class="volume-text" id="volume-0">0 L</div>
-        </div>
-        <div class="capacity-text">Capacity: 8 L</div>
-      </div>
-
-      <!-- Bottle B -->
-      <div class="bottle-wrapper" data-index="1">
-        <div class="bottle-label">Bottle B</div>
-        <div class="bottle" id="bottle-1">
-          <div class="water" id="water-1"></div>
-          <div class="volume-text" id="volume-1">0 L</div>
-        </div>
-        <div class="capacity-text">Capacity: 5 L</div>
-      </div>
-
-      <!-- Bottle C -->
-      <div class="bottle-wrapper" data-index="2">
-        <div class="bottle-label">Bottle C</div>
-        <div class="bottle" id="bottle-2">
-          <div class="water" id="water-2"></div>
-          <div class="volume-text" id="volume-2">0 L</div>
-        </div>
-        <div class="capacity-text">Capacity: 3 L</div>
-      </div>
-    </div>
-
-    <div class="footer">
-      <div class="instructions">
-        Tap one bottle to select it (source). Then tap another bottle to pour into it.
-        You can’t overfill a bottle — it stops when the destination is full or the source is empty.
-      </div>
-      <div class="message" id="message">
-        Ready! Start from A = 8 L, B = 0 L, C = 0 L.
-      </div>
+  <div id="info">
+    Mini City Sandbox – WASD to move, Mouse to look, Shift = sprint, Space = jump
+  </div>
+  <div id="blocker">
+    <div id="instructions">
+      <h1>Click to Enter the City</h1>
+      <p>Move with <span>W A S D</span></p>
+      <p>Look around with your <span>mouse</span></p>
+      <p><span>Shift</span> to sprint, <span>Space</span> to jump</p>
+      <p style="margin-top:10px; font-size:12px; color:#aaa;">
+        (This is a simple GTA-style sandbox made with Three.js – no missions, just explore!)
+      </p>
     </div>
   </div>
 
+  <!-- Three.js + PointerLockControls from CDN -->
+  <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+  <script src="https://unpkg.com/three@0.160.0/examples/js/controls/PointerLockControls.js"></script>
+
   <script>
-    // Capacities for A, B, C
-    const capacities = [8, 5, 3];
+    // Basic three.js variables
+    let camera, scene, renderer, controls;
+    let moveForward = false;
+    let moveBackward = false;
+    let moveLeft = false;
+    let moveRight = false;
+    let canJump = false;
+    let sprint = false;
 
-    // Current volumes
-    let volumes = [8, 0, 0];
+    const velocity = new THREE.Vector3();
+    const direction = new THREE.Vector3();
 
-    // Goal state
-    const goal = [4, 4, 0];
+    let prevTime = performance.now();
 
-    // Selection and moves
-    let selectedIndex = null;
-    let moves = 0;
+    init();
+    animate();
 
-    const moveElem = document.getElementById("moves");
-    const messageElem = document.getElementById("message");
+    function init() {
+      const blocker = document.getElementById("blocker");
+      const instructions = document.getElementById("instructions");
 
-    function updateUI() {
-      volumes.forEach((vol, i) => {
-        const water = document.getElementById("water-" + i);
-        const volumeText = document.getElementById("volume-" + i);
-        const bottle = document.getElementById("bottle-" + i);
+      // Scene
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x050816);
+      scene.fog = new THREE.Fog(0x050816, 50, 400);
 
-        const capacity = capacities[i];
-        const percent = (vol / capacity) * 100;
-        water.style.height = percent + "%";
-        volumeText.textContent = vol + " L";
+      // Camera
+      camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
 
-        // remove target outline
-        bottle.classList.remove("bottle-target");
+      // Renderer
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(window.devicePixelRatio);
+      document.body.appendChild(renderer.domElement);
+
+      // Lights – city vibe
+      const hemiLight = new THREE.HemisphereLight(0x66aaff, 0x222233, 0.6);
+      hemiLight.position.set(0, 200, 0);
+      scene.add(hemiLight);
+
+      const dirLight = new THREE.DirectionalLight(0xffddaa, 0.8);
+      dirLight.position.set(-50, 100, 30);
+      scene.add(dirLight);
+
+      // Pointer lock controls
+      controls = new THREE.PointerLockControls(camera, document.body);
+
+      instructions.addEventListener("click", function () {
+        controls.lock();
       });
 
-      moveElem.textContent = moves.toString();
+      controls.addEventListener("lock", function () {
+        blocker.style.display = "none";
+      });
 
-      if (isGoalReached()) {
-        messageElem.textContent = "Nice! You reached 4 L, 4 L, 0 L 🎉";
-        messageElem.classList.add("win");
-      } else {
-        messageElem.classList.remove("win");
-        if (selectedIndex !== null) {
-          messageElem.textContent = `Selected Bottle ${["A", "B", "C"][selectedIndex]} – now tap a bottle to pour into.`;
-        } else {
-          messageElem.textContent = "Tap a bottle to select it, then tap another to pour.";
+      controls.addEventListener("unlock", function () {
+        blocker.style.display = "flex";
+      });
+
+      scene.add(controls.getObject());
+      controls.getObject().position.set(0, 10, 40); // starting position
+
+      // Terrain (road + pavements)
+      const groundGeo = new THREE.PlaneGeometry(600, 600);
+      const groundMat = new THREE.MeshPhongMaterial({ color: 0x20232a, depthWrite: true });
+      const ground = new THREE.Mesh(groundGeo, groundMat);
+      ground.rotation.x = -Math.PI / 2;
+      ground.receiveShadow = true;
+      scene.add(ground);
+
+      // Simple road grid
+      const roadMat = new THREE.MeshPhongMaterial({ color: 0x111111 });
+      const laneMat = new THREE.MeshBasicMaterial({ color: 0xf4f4f4 });
+      for (let i = -250; i <= 250; i += 80) {
+        const road = new THREE.Mesh(new THREE.PlaneGeometry(600, 20), roadMat);
+        road.rotation.x = -Math.PI / 2;
+        road.position.z = i;
+        scene.add(road);
+
+        const road2 = new THREE.Mesh(new THREE.PlaneGeometry(20, 600), roadMat);
+        road2.rotation.x = -Math.PI / 2;
+        road2.position.x = i;
+        scene.add(road2);
+      }
+
+      // Buildings (random boxes)
+      const buildingColors = [0x203060, 0x304070, 0x401f6b, 0x274060, 0x2b3a67];
+      const buildingGeo = new THREE.BoxGeometry(20, 20, 20);
+
+      for (let x = -220; x <= 220; x += 40) {
+        for (let z = -220; z <= 220; z += 40) {
+          // Skip near centre roads (to keep open space)
+          if (Math.abs(x) < 40 || Math.abs(z) < 40) continue;
+          if (Math.abs(x) < 80 && Math.abs(z) < 80) continue;
+
+          const height = 20 + Math.random() * 80;
+          const geo = new THREE.BoxGeometry(20, height, 20);
+          const color = buildingColors[Math.floor(Math.random() * buildingColors.length)];
+          const mat = new THREE.MeshPhongMaterial({
+            color,
+            emissive: 0x050505,
+            shininess: 30
+          });
+          const building = new THREE.Mesh(geo, mat);
+          building.position.set(x, height / 2, z);
+          building.castShadow = true;
+          building.receiveShadow = true;
+          scene.add(building);
+
+          // Simple "windows" as smaller emissive cubes on some
+          if (Math.random() > 0.6) {
+            const winGeo = new THREE.BoxGeometry(18, height * 0.8, 0.5);
+            const winMat = new THREE.MeshBasicMaterial({ color: 0xfff4cc });
+            const windows = new THREE.Mesh(winGeo, winMat);
+            windows.position.set(x, height / 2, z + 10.3);
+            scene.add(windows);
+          }
         }
       }
-    }
 
-    function isGoalReached() {
-      return volumes[0] === goal[0] &&
-             volumes[1] === goal[1] &&
-             volumes[2] === goal[2];
-    }
-
-    function resetGame() {
-      volumes = [8, 0, 0];
-      moves = 0;
-      clearSelection();
-      updateUI();
-    }
-
-    function clearSelection() {
-      selectedIndex = null;
-      document.querySelectorAll(".bottle").forEach(b => {
-        b.classList.remove("selected", "bottle-target");
-      });
-    }
-
-    function selectBottle(index) {
-      const bottleElem = document.getElementById("bottle-" + index);
-
-      // If nothing selected yet
-      if (selectedIndex === null) {
-        selectedIndex = index;
-        bottleElem.classList.add("selected");
-
-        // highlight possible targets
-        document.querySelectorAll(".bottle").forEach((b, i) => {
-          if (i !== index) b.classList.add("bottle-target");
+      // Small props (cars as rectangles)
+      const carGeo = new THREE.BoxGeometry(8, 3, 14);
+      const carColors = [0xff5555, 0x55ffcc, 0xffee55, 0x9999ff];
+      for (let i = 0; i < 25; i++) {
+        const mat = new THREE.MeshPhongMaterial({
+          color: carColors[Math.floor(Math.random() * carColors.length)]
         });
-
-        updateUI();
-        return;
+        const car = new THREE.Mesh(carGeo, mat);
+        const angle = Math.random() * Math.PI * 2;
+        const radius = 40 + Math.random() * 200;
+        car.position.set(Math.cos(angle) * radius, 1.5, Math.sin(angle) * radius);
+        car.rotation.y = Math.random() * Math.PI * 2;
+        scene.add(car);
       }
 
-      // If clicked the same bottle -> deselect
-      if (selectedIndex === index) {
-        clearSelection();
-        updateUI();
-        return;
-      }
+      // Event listeners
+      const onKeyDown = function (event) {
+        switch (event.code) {
+          case "ArrowUp":
+          case "KeyW":
+            moveForward = true;
+            break;
+          case "ArrowLeft":
+          case "KeyA":
+            moveLeft = true;
+            break;
+          case "ArrowDown":
+          case "KeyS":
+            moveBackward = true;
+            break;
+          case "ArrowRight":
+          case "KeyD":
+            moveRight = true;
+            break;
+          case "Space":
+            if (canJump === true) {
+              velocity.y += 250;
+              canJump = false;
+            }
+            break;
+          case "ShiftLeft":
+          case "ShiftRight":
+            sprint = true;
+            break;
+        }
+      };
 
-      // Now we have a source (selectedIndex) and destination (index)
-      const source = selectedIndex;
-      const dest = index;
+      const onKeyUp = function (event) {
+        switch (event.code) {
+          case "ArrowUp":
+          case "KeyW":
+            moveForward = false;
+            break;
+          case "ArrowLeft":
+          case "KeyA":
+            moveLeft = false;
+            break;
+          case "ArrowDown":
+          case "KeyS":
+            moveBackward = false;
+            break;
+          case "ArrowRight":
+          case "KeyD":
+            moveRight = false;
+            break;
+          case "ShiftLeft":
+          case "ShiftRight":
+            sprint = false;
+            break;
+        }
+      };
 
-      const amountSourceHas = volumes[source];
-      const destSpace = capacities[dest] - volumes[dest];
+      document.addEventListener("keydown", onKeyDown);
+      document.addEventListener("keyup", onKeyUp);
 
-      if (amountSourceHas === 0 || destSpace === 0) {
-        // nothing changes, but we can move selection to new bottle as source
-        clearSelection();
-        selectBottle(index);
-        return;
-      }
-
-      const pourAmount = Math.min(amountSourceHas, destSpace);
-
-      volumes[source] -= pourAmount;
-      volumes[dest] += pourAmount;
-      moves += 1;
-
-      clearSelection();
-      updateUI();
+      window.addEventListener("resize", onWindowResize);
     }
 
-    // Event listeners for bottle clicks
-    document.querySelectorAll(".bottle-wrapper").forEach(wrapper => {
-      wrapper.addEventListener("click", () => {
-        const idx = parseInt(wrapper.getAttribute("data-index"), 10);
-        selectBottle(idx);
-      });
-    });
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
 
-    // Reset button
-    document.getElementById("resetBtn").addEventListener("click", resetGame);
+    function animate() {
+      requestAnimationFrame(animate);
 
-    // Initial render
-    updateUI();
+      const time = performance.now();
+
+      if (controls.isLocked === true) {
+        const delta = (time - prevTime) / 1000;
+
+        // damping
+        velocity.x -= velocity.x * 8.0 * delta;
+        velocity.z -= velocity.z * 8.0 * delta;
+
+        // gravity
+        velocity.y -= 9.8 * 50.0 * delta;
+
+        direction.z = Number(moveForward) - Number(moveBackward);
+        direction.x = Number(moveRight) - Number(moveLeft);
+        direction.normalize(); // consistent movement speed
+
+        const baseSpeed = sprint ? 600.0 : 400.0;
+
+        if (moveForward || moveBackward) velocity.z -= direction.z * baseSpeed * delta;
+        if (moveLeft || moveRight)   velocity.x -= direction.x * baseSpeed * delta;
+
+        controls.moveRight(-velocity.x * delta);
+        controls.moveForward(-velocity.z * delta);
+
+        controls.getObject().position.y += velocity.y * delta;
+
+        // Simple ground collision (y=10)
+        if (controls.getObject().position.y < 10) {
+          velocity.y = 0;
+          controls.getObject().position.y = 10;
+          canJump = true;
+        }
+      }
+
+      prevTime = time;
+
+      renderer.render(scene, camera);
+    }
   </script>
 </body>
 </html>
