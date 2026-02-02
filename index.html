@@ -6,8 +6,8 @@
 <style>
     body {
         font-family: Arial, sans-serif;
-        background: #111;
-        color: #fff;
+        background: #0f0f0f;
+        color: white;
         display: flex;
         justify-content: center;
         align-items: center;
@@ -17,12 +17,12 @@
         background: #1e1e1e;
         padding: 25px;
         border-radius: 10px;
-        width: 320px;
+        width: 330px;
         text-align: center;
     }
     .player {
         background: #2a2a2a;
-        margin: 10px 0;
+        margin: 12px 0;
         padding: 12px;
         border-radius: 8px;
         display: flex;
@@ -32,14 +32,14 @@
     .word {
         display: none;
         font-weight: bold;
-        color: #00ffcc;
+        color: #00ffd5;
     }
     button {
         background: none;
         border: none;
-        color: #fff;
         font-size: 20px;
         cursor: pointer;
+        color: white;
     }
 </style>
 </head>
@@ -68,39 +68,87 @@
 </div>
 
 <script>
-    // 100 word combinations (3 words each)
-    const combinations = [
-        ["Apple", "Apple", "Spy"],
-        ["Beach", "Beach", "Spy"],
-        ["Doctor", "Doctor", "Spy"],
-        ["School", "School", "Spy"],
-        ["Cinema", "Cinema", "Spy"],
-        ["Airport", "Airport", "Spy"],
-        ["Hotel", "Hotel", "Spy"],
-        ["Hospital", "Hospital", "Spy"],
-        ["Mall", "Mall", "Spy"],
-        ["Restaurant", "Restaurant", "Spy"],
-    ];
+/*
+Each combo:
+normal word, spy word
+*/
+const combos = [
+    ["Beach", "Seashore"],
+    ["Hospital", "Clinic"],
+    ["School", "College"],
+    ["Airport", "Airstrip"],
+    ["Restaurant", "Cafe"],
+    ["Cinema", "Theatre"],
+    ["Mall", "Shopping Center"],
+    ["Hotel", "Resort"],
+    ["Bus", "Van"],
+    ["Train", "Metro"],
+    ["Doctor", "Nurse"],
+    ["Police", "Security"],
+    ["Office", "Workspace"],
+    ["Market", "Bazaar"],
+    ["Temple", "Shrine"],
+    ["Church", "Chapel"],
+    ["Stadium", "Arena"],
+    ["Library", "Bookstore"],
+    ["Park", "Garden"],
+    ["Zoo", "Sanctuary"],
+    ["Beach Party", "Pool Party"],
+    ["Wedding", "Reception"],
+    ["Birthday", "Celebration"],
+    ["Classroom", "Lecture Hall"],
+    ["Gym", "Fitness Center"],
+    ["Kitchen", "Pantry"],
+    ["Bedroom", "Guest Room"],
+    ["House", "Apartment"],
+    ["Village", "Town"],
+    ["City", "Metropolis"],
+    ["Mountain", "Hill"],
+    ["Forest", "Jungle"],
+    ["River", "Stream"],
+    ["Sea", "Ocean"],
+    ["Desert", "Dunes"],
+    ["Island", "Isle"],
+    ["Highway", "Road"],
+    ["Bridge", "Flyover"],
+    ["Office Meeting", "Conference"],
+    ["Exam", "Test"],
+    ["Vacation", "Holiday"],
+    ["Picnic", "Outing"],
+    ["Concert", "Show"],
+    ["Match", "Game"],
+    ["Festival", "Carnival"],
+    ["Party", "Get-together"],
+    ["Shopping", "Browsing"],
+    ["Driving", "Riding"],
+    ["Cooking", "Baking"],
+    ["Sleeping", "Resting"]
+]; // 50 combos ✅
 
-    // Expand to 100 automatically
-    while (combinations.length < 100) {
-        combinations.push(...combinations.slice(0, 10));
-    }
+// pick random combo
+const pair = combos[Math.floor(Math.random() * combos.length)];
 
-    // Pick random combination
-    const selected = combinations[Math.floor(Math.random() * combinations.length)];
+// choose spy index
+const spyIndex = Math.floor(Math.random() * 3);
 
-    // Shuffle words
-    selected.sort(() => Math.random() - 0.5);
+// assign words
+const words = [];
+for (let i = 0; i < 3; i++) {
+    words[i] = (i === spyIndex) ? pair[1] : pair[0];
+}
 
-    document.getElementById("w1").innerText = selected[0];
-    document.getElementById("w2").innerText = selected[1];
-    document.getElementById("w3").innerText = selected[2];
+// shuffle player words
+words.sort(() => Math.random() - 0.5);
 
-    function toggleWord(id) {
-        const el = document.getElementById(id);
-        el.style.display = el.style.display === "none" ? "inline" : "none";
-    }
+// set words
+document.getElementById("w1").innerText = words[0];
+document.getElementById("w2").innerText = words[1];
+document.getElementById("w3").innerText = words[2];
+
+function toggleWord(id) {
+    const el = document.getElementById(id);
+    el.style.display = el.style.display === "none" ? "inline" : "none";
+}
 </script>
 
 </body>
