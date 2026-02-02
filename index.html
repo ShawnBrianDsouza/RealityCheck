@@ -1,40 +1,110 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Mini City Sandbox (WASD + Mouse + Shift + Space)</title>
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      height: 100%;
-      background: #000;
+<meta charset="UTF-8">
+<title>Spy Game</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #111;
+        color: #fff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+    .container {
+        background: #1e1e1e;
+        padding: 25px;
+        border-radius: 10px;
+        width: 320px;
+        text-align: center;
+    }
+    .player {
+        background: #2a2a2a;
+        margin: 10px 0;
+        padding: 12px;
+        border-radius: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .word {
+        display: none;
+        font-weight: bold;
+        color: #00ffcc;
+    }
+    button {
+        background: none;
+        border: none;
+        color: #fff;
+        font-size: 20px;
+        cursor: pointer;
+    }
+</style>
+</head>
+<body>
 
+<div class="container">
+    <h2>🕵️ Spy Game</h2>
+
+    <div class="player">
+        <span>Shawn</span>
+        <span class="word" id="w1"></span>
+        <button onclick="toggleWord('w1')">👁</button>
+    </div>
+
+    <div class="player">
+        <span>Saniel</span>
+        <span class="word" id="w2"></span>
+        <button onclick="toggleWord('w2')">👁</button>
+    </div>
+
+    <div class="player">
+        <span>Melita</span>
+        <span class="word" id="w3"></span>
+        <button onclick="toggleWord('w3')">👁</button>
+    </div>
+</div>
+
+<script>
+    // 100 word combinations (3 words each)
+    const combinations = [
+        ["Apple", "Apple", "Spy"],
+        ["Beach", "Beach", "Spy"],
+        ["Doctor", "Doctor", "Spy"],
+        ["School", "School", "Spy"],
+        ["Cinema", "Cinema", "Spy"],
+        ["Airport", "Airport", "Spy"],
+        ["Hotel", "Hotel", "Spy"],
+        ["Hospital", "Hospital", "Spy"],
+        ["Mall", "Mall", "Spy"],
+        ["Restaurant", "Restaurant", "Spy"],
+    ];
+
+    // Expand to 100 automatically
+    while (combinations.length < 100) {
+        combinations.push(...combinations.slice(0, 10));
     }
-    #info {
-      position: absolute;
-      top: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      color: #fff;
-      background: rgba(0,0,0,0.6);
-      padding: 8px 14px;
-      border-radius: 999px;
-      font-size: 13px;
-      z-index: 10;
-      pointer-events: none;
-      text-align: center;
+
+    // Pick random combination
+    const selected = combinations[Math.floor(Math.random() * combinations.length)];
+
+    // Shuffle words
+    selected.sort(() => Math.random() - 0.5);
+
+    document.getElementById("w1").innerText = selected[0];
+    document.getElementById("w2").innerText = selected[1];
+    document.getElementById("w3").innerText = selected[2];
+
+    function toggleWord(id) {
+        const el = document.getElementById(id);
+        el.style.display = el.style.display === "none" ? "inline" : "none";
     }
-    #blocker {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0,0,0,0.7);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
+</script>
+
+</body>
+</html>      flex-direction: column;
       color: #fff;
       z-index: 9;
     }
@@ -327,4 +397,5 @@
   </script>
 </body>
 </html>
+
 
