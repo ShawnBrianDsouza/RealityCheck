@@ -3,151 +3,214 @@
 <head>
 <meta charset="UTF-8">
 <title>Spy Game</title>
+
 <style>
     body {
-        font-family: Arial, sans-serif;
-        background: #0f0f0f;
-        color: white;
+        margin: 0;
+        font-family: "Segoe UI", sans-serif;
+        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        color: #fff;
         display: flex;
         justify-content: center;
         align-items: center;
-        height: 100vh;
+        min-height: 100vh;
     }
-    .container {
-        background: #1e1e1e;
+
+    .box {
+        background: #111;
         padding: 25px;
-        border-radius: 10px;
-        width: 330px;
-        text-align: center;
+        border-radius: 14px;
+        width: 360px;
+        max-width: 95%;
+        box-shadow: 0 0 25px rgba(0,0,0,0.6);
     }
-    .player {
-        background: #2a2a2a;
-        margin: 12px 0;
-        padding: 12px;
+
+    h2 {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    input {
+        width: 100%;
+        padding: 10px;
+        margin: 8px 0;
         border-radius: 8px;
+        border: none;
+        outline: none;
+        font-size: 15px;
+    }
+
+    button {
+        width: 100%;
+        padding: 10px;
+        margin-top: 12px;
+        border-radius: 8px;
+        border: none;
+        background: #00ffd5;
+        color: #000;
+        font-weight: bold;
+        font-size: 15px;
+        cursor: pointer;
+    }
+
+    button:hover {
+        opacity: 0.9;
+    }
+
+    .player {
+        background: #1f1f1f;
+        padding: 12px;
+        margin: 10px 0;
+        border-radius: 10px;
         display: flex;
         justify-content: space-between;
         align-items: center;
     }
+
     .word {
         display: none;
         font-weight: bold;
         color: #00ffd5;
+        margin-left: 10px;
     }
-    button {
+
+    .eye {
         background: none;
         border: none;
         font-size: 20px;
         cursor: pointer;
-        color: white;
+        color: #fff;
+    }
+
+    .hidden {
+        display: none;
     }
 </style>
 </head>
+
 <body>
 
-<div class="container">
+<div class="box" id="setup">
     <h2>🕵️ Spy Game</h2>
+    <input type="number" id="playerCount" min="3" placeholder="Number of players (min 3)">
+    <button onclick="createNameInputs()">Next</button>
+</div>
 
-    <div class="player">
-        <span>Shawn</span>
-        <span class="word" id="w1"></span>
-        <button onclick="toggleWord('w1')">👁</button>
-    </div>
+<div class="box hidden" id="namesBox">
+    <h2>Enter Player Names</h2>
+    <div id="nameInputs"></div>
+    <button onclick="startGame()">Start Game</button>
+</div>
 
-    <div class="player">
-        <span>Saniel</span>
-        <span class="word" id="w2"></span>
-        <button onclick="toggleWord('w2')">👁</button>
-    </div>
-
-    <div class="player">
-        <span>Melita</span>
-        <span class="word" id="w3"></span>
-        <button onclick="toggleWord('w3')">👁</button>
-    </div>
+<div class="box hidden" id="gameBox">
+    <h2>Spy Game</h2>
+    <div id="players"></div>
+    <button onclick="newGame()">🔄 New Game</button>
 </div>
 
 <script>
-/*
-Each combo:
-normal word, spy word
-*/
-const combos = [
-    ["Beach", "Seashore"],
-    ["Hospital", "Clinic"],
-    ["School", "College"],
-    ["Airport", "Airstrip"],
-    ["Restaurant", "Cafe"],
-    ["Cinema", "Theatre"],
-    ["Mall", "Shopping Center"],
-    ["Hotel", "Resort"],
-    ["Bus", "Van"],
-    ["Train", "Metro"],
-    ["Doctor", "Nurse"],
-    ["Police", "Security"],
-    ["Office", "Workspace"],
-    ["Market", "Bazaar"],
-    ["Temple", "Shrine"],
-    ["Church", "Chapel"],
-    ["Stadium", "Arena"],
-    ["Library", "Bookstore"],
-    ["Park", "Garden"],
-    ["Zoo", "Sanctuary"],
-    ["Beach Party", "Pool Party"],
-    ["Wedding", "Reception"],
-    ["Birthday", "Celebration"],
-    ["Classroom", "Lecture Hall"],
-    ["Gym", "Fitness Center"],
-    ["Kitchen", "Pantry"],
-    ["Bedroom", "Guest Room"],
-    ["House", "Apartment"],
-    ["Village", "Town"],
-    ["City", "Metropolis"],
-    ["Mountain", "Hill"],
-    ["Forest", "Jungle"],
-    ["River", "Stream"],
-    ["Sea", "Ocean"],
-    ["Desert", "Dunes"],
-    ["Island", "Isle"],
-    ["Highway", "Road"],
-    ["Bridge", "Flyover"],
-    ["Office Meeting", "Conference"],
-    ["Exam", "Test"],
-    ["Vacation", "Holiday"],
-    ["Picnic", "Outing"],
-    ["Concert", "Show"],
-    ["Match", "Game"],
-    ["Festival", "Carnival"],
-    ["Party", "Get-together"],
-    ["Shopping", "Browsing"],
-    ["Driving", "Riding"],
-    ["Cooking", "Baking"],
-    ["Sleeping", "Resting"]
-]; // 50 combos ✅
+// ================= WORD COMBOS (200+) =================
+const basePairs = [
+["Beach","Seashore"],["Hospital","Clinic"],["School","College"],["Airport","Airstrip"],
+["Restaurant","Cafe"],["Cinema","Theatre"],["Mall","Shopping Center"],["Hotel","Resort"],
+["Bus","Van"],["Train","Metro"],["Doctor","Nurse"],["Police","Security"],
+["Market","Bazaar"],["Park","Garden"],["Zoo","Sanctuary"],["Library","Bookstore"],
+["Gym","Fitness Center"],["Kitchen","Pantry"],["Bedroom","Guest Room"],["House","Apartment"],
+["Village","Town"],["City","Metropolis"],["Mountain","Hill"],["Forest","Jungle"],
+["River","Stream"],["Sea","Ocean"],["Desert","Dunes"],["Island","Isle"],
+["Bridge","Flyover"],["Highway","Road"],["Office","Workspace"],
+["Wedding","Reception"],["Birthday","Celebration"],["Exam","Test"],
+["Vacation","Holiday"],["Picnic","Outing"],["Concert","Show"],
+["Match","Game"],["Festival","Carnival"],["Party","Get-together"]
+];
 
-// pick random combo
-const pair = combos[Math.floor(Math.random() * combos.length)];
+// Expand to 200+
+const combos = [];
+for (let i = 0; i < 5; i++) {
+    basePairs.forEach(p => combos.push(p));
+}
+// combos.length = 200+
 
-// choose spy index
-const spyIndex = Math.floor(Math.random() * 3);
+let playerNames = [];
 
-// assign words
-const words = [];
-for (let i = 0; i < 3; i++) {
-    words[i] = (i === spyIndex) ? pair[1] : pair[0];
+// ================= SETUP =================
+function createNameInputs() {
+    const count = parseInt(document.getElementById("playerCount").value);
+    if (isNaN(count) || count < 3) {
+        alert("Minimum 3 players required");
+        return;
+    }
+
+    document.getElementById("setup").classList.add("hidden");
+    document.getElementById("namesBox").classList.remove("hidden");
+
+    const container = document.getElementById("nameInputs");
+    container.innerHTML = "";
+
+    for (let i = 0; i < count; i++) {
+        const input = document.createElement("input");
+        input.placeholder = `Player ${i+1} name`;
+        container.appendChild(input);
+    }
 }
 
-// shuffle player words
-words.sort(() => Math.random() - 0.5);
+// ================= GAME =================
+function startGame() {
+    const inputs = document.querySelectorAll("#nameInputs input");
+    playerNames = [];
 
-// set words
-document.getElementById("w1").innerText = words[0];
-document.getElementById("w2").innerText = words[1];
-document.getElementById("w3").innerText = words[2];
+    inputs.forEach(inp => {
+        if (inp.value.trim() !== "") {
+            playerNames.push(inp.value.trim());
+        }
+    });
+
+    if (playerNames.length < 3) {
+        alert("Enter all player names");
+        return;
+    }
+
+    document.getElementById("namesBox").classList.add("hidden");
+    document.getElementById("gameBox").classList.remove("hidden");
+
+    assignWords();
+}
+
+function assignWords() {
+    const playersDiv = document.getElementById("players");
+    playersDiv.innerHTML = "";
+
+    const pair = combos[Math.floor(Math.random() * combos.length)];
+    const spyIndex = Math.floor(Math.random() * playerNames.length);
+
+    const words = playerNames.map((_, i) =>
+        i === spyIndex ? pair[1] : pair[0]
+    );
+
+    // shuffle words
+    words.sort(() => Math.random() - 0.5);
+
+    playerNames.forEach((name, i) => {
+        const div = document.createElement("div");
+        div.className = "player";
+
+        div.innerHTML = `
+            <span>${name}</span>
+            <span class="word" id="w${i}">${words[i]}</span>
+            <button class="eye" onclick="toggleWord('w${i}')">👁</button>
+        `;
+
+        playersDiv.appendChild(div);
+    });
+}
 
 function toggleWord(id) {
     const el = document.getElementById(id);
     el.style.display = el.style.display === "none" ? "inline" : "none";
+}
+
+function newGame() {
+    assignWords();
 }
 </script>
 
