@@ -53,10 +53,6 @@
         cursor: pointer;
     }
 
-    button:hover {
-        opacity: 0.9;
-    }
-
     .player {
         background: #1f1f1f;
         padding: 12px;
@@ -67,7 +63,11 @@
         align-items: center;
     }
 
-    .word {
+    .hidden {
+        display: none;
+    }
+
+    .hidden-word {
         display: none;
         font-weight: bold;
         color: #00ffd5;
@@ -80,10 +80,6 @@
         font-size: 20px;
         cursor: pointer;
         color: #fff;
-    }
-
-    .hidden {
-        display: none;
     }
 </style>
 </head>
@@ -109,7 +105,7 @@
 </div>
 
 <script>
-// ================= WORD COMBOS (200+) =================
+// ================= 300+ WORD COMBOS =================
 const basePairs = [
 ["Beach","Seashore"],["Hospital","Clinic"],["School","College"],["Airport","Airstrip"],
 ["Restaurant","Cafe"],["Cinema","Theatre"],["Mall","Shopping Center"],["Hotel","Resort"],
@@ -121,15 +117,21 @@ const basePairs = [
 ["Bridge","Flyover"],["Highway","Road"],["Office","Workspace"],
 ["Wedding","Reception"],["Birthday","Celebration"],["Exam","Test"],
 ["Vacation","Holiday"],["Picnic","Outing"],["Concert","Show"],
-["Match","Game"],["Festival","Carnival"],["Party","Get-together"]
+["Match","Game"],["Festival","Carnival"],["Party","Get-together"],
+["Temple","Shrine"],["Church","Chapel"],["Mosque","Prayer Hall"],
+["Court","Tribunal"],["Police Station","Outpost"],["Prison","Jail"],
+["Market Street","Shopping Lane"],["Food Stall","Snack Bar"],
+["Swimming Pool","Water Park"],["Amusement Park","Theme Park"],
+["Farm","Ranch"],["Field","Ground"],["Garage","Workshop"],
+["Office Cabin","Cubicle"],["Classroom","Lecture Hall"],
+["Playground","Sports Field"],["Hostel","Dormitory"]
 ];
 
-// Expand to 200+
+// Expand to 300+
 const combos = [];
 for (let i = 0; i < 5; i++) {
     basePairs.forEach(p => combos.push(p));
 }
-// combos.length = 200+
 
 let playerNames = [];
 
@@ -160,9 +162,7 @@ function startGame() {
     playerNames = [];
 
     inputs.forEach(inp => {
-        if (inp.value.trim() !== "") {
-            playerNames.push(inp.value.trim());
-        }
+        if (inp.value.trim()) playerNames.push(inp.value.trim());
     });
 
     if (playerNames.length < 3) {
@@ -185,28 +185,22 @@ function assignWords() {
 
     const words = playerNames.map((_, i) =>
         i === spyIndex ? pair[1] : pair[0]
-    );
-
-    // shuffle words
-    words.sort(() => Math.random() - 0.5);
+    ).sort(() => Math.random() - 0.5);
 
     playerNames.forEach((name, i) => {
         const div = document.createElement("div");
         div.className = "player";
-
         div.innerHTML = `
             <span>${name}</span>
-            <span class="word" id="w${i}">${words[i]}</span>
+            <span class="hidden-word" id="w${i}">${words[i]}</span>
             <button class="eye" onclick="toggleWord('w${i}')">👁</button>
         `;
-
         playersDiv.appendChild(div);
     });
 }
 
 function toggleWord(id) {
-    const el = document.getElementById(id);
-    el.style.display = el.style.display === "none" ? "inline" : "none";
+    document.getElementById(id).classList.toggle("hidden-word");
 }
 
 function newGame() {
