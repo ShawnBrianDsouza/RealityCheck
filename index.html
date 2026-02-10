@@ -49,7 +49,367 @@
 SQL PLUS – COMPLETE REVISION
 (EXAM READY NOTES)
 ===============================
+====================================================
+SQL PLUS – COMPLETE SYNTAX NOTES (FULL & DETAILED)
+====================================================
 
+----------------------------------------------------
+1. BASIC DEFINITIONS
+----------------------------------------------------
+Database : Collection of tables
+Table    : Data stored in rows & columns
+Row      : One complete record
+Column   : One attribute / field
+
+----------------------------------------------------
+2. SQL COMMAND TYPES
+----------------------------------------------------
+DDL – Data Definition Language
+- CREATE
+- ALTER
+- DROP
+- TRUNCATE
+
+DML – Data Manipulation Language
+- INSERT
+- SELECT
+- UPDATE
+- DELETE
+
+TCL – Transaction Control Language
+- COMMIT
+- ROLLBACK
+- SAVEPOINT
+
+----------------------------------------------------
+3. DATA TYPES
+----------------------------------------------------
+NUMBER(size)
+VARCHAR(size)
+DATE
+
+----------------------------------------------------
+4. CREATE TABLE
+----------------------------------------------------
+CREATE TABLE table_name (
+  column_name datatype constraint,
+  column_name datatype constraint
+);
+
+Example:
+CREATE TABLE STUDENT (
+  reg_no NUMBER PRIMARY KEY,
+  name VARCHAR(20),
+  dob DATE
+);
+
+----------------------------------------------------
+5. INSERT
+----------------------------------------------------
+Insert full row:
+INSERT INTO STUDENT VALUES (101, 'RAM', '10-AUG-2002');
+
+Insert selected columns:
+INSERT INTO STUDENT (reg_no, name)
+VALUES (102, 'SITA');
+
+----------------------------------------------------
+6. SELECT
+----------------------------------------------------
+Select all columns:
+SELECT * FROM STUDENT;
+
+Select specific columns:
+SELECT name FROM STUDENT;
+
+----------------------------------------------------
+7. WHERE (Row condition)
+----------------------------------------------------
+SELECT * FROM STUDENT
+WHERE reg_no = 101;
+
+SELECT * FROM STUDENT
+WHERE name = 'RAM';
+
+SELECT * FROM STUDENT
+WHERE dob = '10-AUG-2002';
+
+----------------------------------------------------
+8. UPDATE
+----------------------------------------------------
+Update specific row:
+UPDATE STUDENT
+SET name = 'RAHUL'
+WHERE reg_no = 101;
+
+Update all rows:
+UPDATE STUDENT
+SET name = 'UNKNOWN';
+
+----------------------------------------------------
+9. DELETE / TRUNCATE / DROP
+----------------------------------------------------
+Delete selected rows (rollback possible):
+DELETE FROM STUDENT
+WHERE reg_no = 101;
+
+Delete all rows (rollback possible):
+DELETE FROM STUDENT;
+
+Truncate table (no rollback):
+TRUNCATE TABLE STUDENT;
+
+Drop table (structure deleted):
+DROP TABLE STUDENT;
+
+----------------------------------------------------
+10. COMMIT / ROLLBACK
+----------------------------------------------------
+COMMIT;    -- save permanently
+ROLLBACK;  -- undo changes
+
+----------------------------------------------------
+11. CONSTRAINTS
+----------------------------------------------------
+NOT NULL:
+name VARCHAR(20) NOT NULL
+
+PRIMARY KEY:
+reg_no NUMBER PRIMARY KEY
+
+UNIQUE:
+email VARCHAR(30) UNIQUE
+
+CHECK:
+gender CHAR(1) CHECK (gender IN ('M','F'))
+
+DEFAULT:
+salary NUMBER DEFAULT 10000
+
+----------------------------------------------------
+12. FOREIGN KEY
+----------------------------------------------------
+Syntax (column-level):
+dept_no NUMBER REFERENCES DEPARTMENT(dept_no)
+
+Syntax (table-level):
+FOREIGN KEY (dept_no) REFERENCES DEPARTMENT(dept_no)
+
+----------------------------------------------------
+13. ON DELETE CASCADE
+----------------------------------------------------
+Parent Table:
+CREATE TABLE DEPARTMENT (
+  dept_no NUMBER PRIMARY KEY,
+  dept_name VARCHAR(20)
+);
+
+Child Table:
+CREATE TABLE STUDENT (
+  reg_no NUMBER PRIMARY KEY,
+  name VARCHAR(20),
+  dept_no NUMBER
+    REFERENCES DEPARTMENT(dept_no)
+    ON DELETE CASCADE
+);
+
+Meaning:
+Delete parent → child rows auto deleted
+
+----------------------------------------------------
+14. JOIN (Two tables)
+----------------------------------------------------
+SELECT s.name, d.dept_name
+FROM STUDENT s, DEPARTMENT d
+WHERE s.dept_no = d.dept_no;
+
+----------------------------------------------------
+15. ALIAS (AS)
+----------------------------------------------------
+Column alias:
+SELECT COUNT(*) AS total_count FROM STUDENT;
+
+Table alias:
+FROM STUDENT s
+
+AS is optional:
+COUNT(*) total_count
+
+----------------------------------------------------
+16. AGGREGATE FUNCTIONS
+----------------------------------------------------
+COUNT(column)
+SUM(column)
+AVG(column)
+MIN(column)
+MAX(column)
+
+----------------------------------------------------
+17. GROUP BY
+----------------------------------------------------
+Rule:
+Every column in SELECT must be
+- in GROUP BY
+OR
+- an aggregate function
+
+COUNT:
+SELECT dept, COUNT(emp_id)
+FROM EMPLOYEE
+GROUP BY dept;
+
+SUM:
+SELECT dept, SUM(salary)
+FROM EMPLOYEE
+GROUP BY dept;
+
+AVG:
+SELECT dept, AVG(salary)
+FROM EMPLOYEE
+GROUP BY dept;
+
+MIN & MAX:
+SELECT dept, MIN(salary), MAX(salary)
+FROM EMPLOYEE
+GROUP BY dept;
+
+----------------------------------------------------
+18. GROUP BY + HAVING
+----------------------------------------------------
+HAVING is used for aggregate condition
+
+SELECT dept, COUNT(*)
+FROM EMPLOYEE
+GROUP BY dept
+HAVING COUNT(*) > 2;
+
+----------------------------------------------------
+19. GROUP BY + WHERE
+----------------------------------------------------
+WHERE filters rows BEFORE grouping
+
+SELECT dept, AVG(salary)
+FROM EMPLOYEE
+WHERE salary > 30000
+GROUP BY dept;
+
+----------------------------------------------------
+20. GROUP BY + JOIN (EXAM FAV)
+----------------------------------------------------
+SELECT s.srno, COUNT(a.department)
+FROM service_request s, assign a
+WHERE s.srno = a.srno
+GROUP BY s.srno;
+
+----------------------------------------------------
+21. ORDER BY
+----------------------------------------------------
+Ascending:
+ORDER BY salary;
+
+Descending:
+ORDER BY salary DESC;
+
+----------------------------------------------------
+22. BUILT-IN FUNCTIONS
+----------------------------------------------------
+UPPER(name)
+LOWER(name)
+LENGTH(name)
+NVL(column, 0)
+ROUND(salary, -2)
+TO_CHAR(dob, 'DD-MON-YYYY')
+
+----------------------------------------------------
+23. LIKE (Pattern Matching)
+----------------------------------------------------
+SELECT * FROM STUDENT
+WHERE name LIKE '%oa%';
+
+----------------------------------------------------
+24. SET OPERATIONS
+----------------------------------------------------
+UNION:
+SELECT col FROM A
+UNION
+SELECT col FROM B;
+
+INTERSECT:
+SELECT col FROM A
+INTERSECT
+SELECT col FROM B;
+
+MINUS:
+SELECT col FROM A
+MINUS
+SELECT col FROM B;
+
+----------------------------------------------------
+25. EXISTS / NOT EXISTS
+----------------------------------------------------
+EXISTS:
+SELECT s.name
+FROM STUDENT s
+WHERE EXISTS (
+  SELECT *
+  FROM ENROLL e
+  WHERE e.id = s.id
+);
+
+NOT EXISTS:
+SELECT s.name
+FROM STUDENT s
+WHERE NOT EXISTS (
+  SELECT *
+  FROM ENROLL e
+  WHERE e.id = s.id
+);
+
+----------------------------------------------------
+26. SERVICE REQUEST – FULL QUESTIONS
+----------------------------------------------------
+Q1(a):
+SELECT s.srno, s.sr_date
+FROM service_request s, assign a
+WHERE s.srno = a.srno
+  AND a.department = 'NH Repair'
+ORDER BY s.sr_date DESC;
+
+Q1(b):
+SELECT s.srno, s.request
+FROM service_request s, assign a
+WHERE s.srno = a.srno
+GROUP BY s.srno, s.request
+HAVING COUNT(a.department) >= 2;
+
+Q2(a):
+SELECT s.srno, s.request
+FROM service_request s, assign a
+WHERE s.srno = a.srno
+  AND s.request LIKE '%oa%'
+  AND a.department = 'PWD'
+ORDER BY s.srno DESC;
+
+Q2(b):
+SELECT s.srno, COUNT(a.department) AS dept_count
+FROM service_request s, assign a
+WHERE s.srno = a.srno
+  AND EXTRACT(YEAR FROM s.sr_date) = 2022
+GROUP BY s.srno;
+
+----------------------------------------------------
+FINAL GOLDEN RULES
+----------------------------------------------------
+WHERE  → row condition
+HAVING → group condition
+JOIN   → match common key
+FOREIGN KEY → child depends on parent
+CASCADE → parent delete = child delete
+AGGREGATE → GROUP BY needed
+
+====================================================
+END OF SQL NOTES
+====================================================
 1. BASIC TERMS
 --------------
 Database : Collection of tables
@@ -233,5 +593,6 @@ GROUP BY s.srno;
 
 </body>
 </html>
+
 
 
