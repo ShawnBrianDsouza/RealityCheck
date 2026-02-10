@@ -1,1 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SQL Plus Copy Notes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #0f172a;
+            color: #e5e7eb;
+            padding: 20px;
+        }
+
+        h2 {
+            color: #38bdf8;
+        }
+
+        .box {
+            background: #020617;
+            border: 1px solid #334155;
+            padding: 15px;
+            margin-bottom: 25px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            font-family: Consolas, monospace;
+            font-size: 14px;
+        }
+
+        button {
+            background: #22c55e;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: #16a34a;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>📘 SQL PLUS – COMPLETE REVISION</h2>
+    <div class="box" id="text1">
+===============================
+SQL PLUS – COMPLETE REVISION
+(EXAM READY NOTES)
+===============================
+
+1. BASIC TERMS
+--------------
+Database : Collection of tables
+Table    : Data stored in rows and columns
+Column   : One type of data (name, salary, dept)
+Row      : One complete record
+
+--------------------------------
+
+2. SQL COMMAND TYPES
+-------------------
+DDL (Structure):
+- CREATE
+- ALTER
+- DROP
+- TRUNCATE
+
+DML (Data):
+- INSERT
+- SELECT
+- UPDATE
+- DELETE
+
+TCL (Transaction):
+- COMMIT
+- ROLLBACK
+- SAVEPOINT
+
+--------------------------------
+
+3. DATA TYPES (COMMON)
+---------------------
+NUMBER(size)
+VARCHAR(size)
+DATE
+
+--------------------------------
+
+4. CREATE TABLE
+---------------
+CREATE TABLE STUDENT (
+  reg_no NUMBER PRIMARY KEY,
+  name VARCHAR(20),
+  dob DATE
+);
+
+--------------------------------
+
+5. INSERT
+---------
+INSERT INTO STUDENT VALUES (101, 'RAM', '10-AUG-2002');
+COMMIT;
+
+--------------------------------
+
+6. SELECT
+---------
+SELECT * FROM STUDENT;
+SELECT name FROM STUDENT WHERE reg_no = 101;
+
+--------------------------------
+
+7. WHERE
+--------
+Used to filter ROWS
+Runs before GROUP BY
+
+SELECT * FROM STUDENT WHERE name = 'RAM';
+
+--------------------------------
+
+8. UPDATE
+---------
+UPDATE STUDENT
+SET name = 'RAHUL'
+WHERE reg_no = 101;
+
+--------------------------------
+
+9. DELETE vs TRUNCATE vs DROP
+----------------------------
+DELETE    : Removes rows (ROLLBACK possible)
+TRUNCATE  : Removes all rows (NO rollback)
+DROP      : Deletes table completely
+
+--------------------------------
+
+10. COMMIT & ROLLBACK
+--------------------
+COMMIT;    -- save permanently
+ROLLBACK;  -- undo changes
+    </div>
+    <button onclick="copyText('text1')">📋 Copy SQL Plus Revision</button>
+
+    <h2>🛠 SERVICE REQUEST – QUESTIONS & ANSWERS</h2>
+    <div class="box" id="text2">
+====================================
+SERVICE REQUEST – 4 QUESTIONS & ANSWERS
+====================================
+
+TABLES:
+--------
+service_request(srno, request, sr_date)
+assign(srno, department)
+
+------------------------------------
+
+Q1 (a)
+------
+Find all the service request numbers that have been assigned to
+NH Repair department and sort them in descending order of sr_date.
+
+ANSWER:
+-------
+
+SELECT s.srno, s.sr_date
+FROM service_request s, assign a
+WHERE s.srno = a.srno
+  AND a.department = 'NH Repair'
+ORDER BY s.sr_date DESC;
+
+------------------------------------
+
+Q1 (b)
+------
+Find all the service requests that have been assigned to
+at least two departments.
+
+ANSWER:
+-------
+
+SELECT s.srno, s.request
+FROM service_request s, assign a
+WHERE s.srno = a.srno
+GROUP BY s.srno, s.request
+HAVING COUNT(a.department) >= 2;
+
+------------------------------------
+
+Q2 (a)
+------
+Find all the service requests that contain 'oa' and are assigned
+to PWD department and sort them in descending order of srno.
+
+ANSWER:
+-------
+
+SELECT s.srno, s.request
+FROM service_request s, assign a
+WHERE s.srno = a.srno
+  AND s.request LIKE '%oa%'
+  AND a.department = 'PWD'
+ORDER BY s.srno DESC;
+
+------------------------------------
+
+Q2 (b)
+------
+For service requests of year 2022, find the number of departments
+to which each service request has been assigned.
+
+ANSWER:
+-------
+
+SELECT s.srno, COUNT(a.department) AS dept_count
+FROM service_request s, assign a
+WHERE s.srno = a.srno
+  AND EXTRACT(YEAR FROM s.sr_date) = 2022
+GROUP BY s.srno;
+    </div>
+    <button onclick="copyText('text2')">📋 Copy Service Request Q&A</button>
+
+    <script>
+        function copyText(id) {
+            const text = document.getElementById(id).innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                alert("Copied successfully ✅");
+            });
+        }
+    </script>
+
+</body>
+</html>
+
 
