@@ -1,598 +1,359 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>SQL Plus Copy Notes</title>
+    <title>Sports Ladder System</title>
+
     <style>
+        * { box-sizing: border-box; }
+
         body {
+            margin: 0;
             font-family: Arial, sans-serif;
-            background: #0f172a;
-            color: #e5e7eb;
+            background: linear-gradient(135deg, #020617, #0f172a);
+            color: white;
+        }
+
+        header {
+            padding: 15px 25px;
+            font-size: 22px;
+            font-weight: bold;
+            background-color: black;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .settings { cursor: pointer; font-size: 20px; }
+
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 0 15px;
+        }
+
+        .card {
+            background-color: #1e293b;
             padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
         }
 
-        h2 {
-            color: #38bdf8;
+        h2 { color: #38bdf8; text-align: center; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
         }
 
-        .box {
-            background: #020617;
-            border: 1px solid #334155;
-            padding: 15px;
-            margin-bottom: 25px;
-            border-radius: 8px;
-            white-space: pre-wrap;
-            font-family: Consolas, monospace;
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid gray;
+            text-align: center;
+        }
+
+        th { color: #38bdf8; }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 12px;
+            border-radius: 5px;
+            border: none;
+        }
+
+        label {
             font-size: 14px;
+            color: #cbd5f5;
+            display: block;
+            margin-bottom: 4px;
         }
 
         button {
-            background: #22c55e;
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 12px;
+            border-radius: 5px;
             border: none;
-            padding: 10px 16px;
-            border-radius: 6px;
+            font-weight: bold;
             cursor: pointer;
-            font-size: 14px;
-            margin-top: 10px;
+            background-color: #38bdf8;
+            transition: 0.2s;
         }
 
         button:hover {
-            background: #16a34a;
+            background-color: #0ea5e9;   /* ✅ Hover highlight */
+            transform: scale(1.02);
         }
+
+        button:active {
+            background-color: #0284c7;   /* ✅ Click feedback */
+        }
+
+        .hidden { display: none; }
+
+        .back-btn { background-color: gray; }
+
+        .danger {
+            background-color: #ef4444;
+            color: white;
+        }
+
+        .danger:hover { background-color: #dc2626; }
     </style>
-</head>
-<body>
-
-    <h2>📘 SQL PLUS – COMPLETE REVISION</h2>
-    <div class="box" id="text1">
-===============================
-SQL PLUS – COMPLETE REVISION
-(EXAM READY NOTES)
-===============================
-====================================================
-SQL PLUS – COMPLETE SYNTAX NOTES (FULL & DETAILED)
-====================================================
-
-----------------------------------------------------
-1. BASIC DEFINITIONS
-----------------------------------------------------
-Database : Collection of tables
-Table    : Data stored in rows & columns
-Row      : One complete record
-Column   : One attribute / field
-
-----------------------------------------------------
-2. SQL COMMAND TYPES
-----------------------------------------------------
-DDL – Data Definition Language
-- CREATE
-- ALTER
-- DROP
-- TRUNCATE
-
-DML – Data Manipulation Language
-- INSERT
-- SELECT
-- UPDATE
-- DELETE
-
-TCL – Transaction Control Language
-- COMMIT
-- ROLLBACK
-- SAVEPOINT
-
-----------------------------------------------------
-3. DATA TYPES
-----------------------------------------------------
-NUMBER(size)
-VARCHAR(size)
-DATE
-
-----------------------------------------------------
-4. CREATE TABLE
-----------------------------------------------------
-CREATE TABLE table_name (
-  column_name datatype constraint,
-  column_name datatype constraint
-);
-
-Example:
-CREATE TABLE STUDENT (
-  reg_no NUMBER PRIMARY KEY,
-  name VARCHAR(20),
-  dob DATE
-);
-
-----------------------------------------------------
-5. INSERT
-----------------------------------------------------
-Insert full row:
-INSERT INTO STUDENT VALUES (101, 'RAM', '10-AUG-2002');
-
-Insert selected columns:
-INSERT INTO STUDENT (reg_no, name)
-VALUES (102, 'SITA');
-
-----------------------------------------------------
-6. SELECT
-----------------------------------------------------
-Select all columns:
-SELECT * FROM STUDENT;
-
-Select specific columns:
-SELECT name FROM STUDENT;
-
-----------------------------------------------------
-7. WHERE (Row condition)
-----------------------------------------------------
-SELECT * FROM STUDENT
-WHERE reg_no = 101;
-
-SELECT * FROM STUDENT
-WHERE name = 'RAM';
-
-SELECT * FROM STUDENT
-WHERE dob = '10-AUG-2002';
-
-----------------------------------------------------
-8. UPDATE
-----------------------------------------------------
-Update specific row:
-UPDATE STUDENT
-SET name = 'RAHUL'
-WHERE reg_no = 101;
-
-Update all rows:
-UPDATE STUDENT
-SET name = 'UNKNOWN';
-
-----------------------------------------------------
-9. DELETE / TRUNCATE / DROP
-----------------------------------------------------
-Delete selected rows (rollback possible):
-DELETE FROM STUDENT
-WHERE reg_no = 101;
-
-Delete all rows (rollback possible):
-DELETE FROM STUDENT;
-
-Truncate table (no rollback):
-TRUNCATE TABLE STUDENT;
-
-Drop table (structure deleted):
-DROP TABLE STUDENT;
-
-----------------------------------------------------
-10. COMMIT / ROLLBACK
-----------------------------------------------------
-COMMIT;    -- save permanently
-ROLLBACK;  -- undo changes
-
-----------------------------------------------------
-11. CONSTRAINTS
-----------------------------------------------------
-NOT NULL:
-name VARCHAR(20) NOT NULL
-
-PRIMARY KEY:
-reg_no NUMBER PRIMARY KEY
-
-UNIQUE:
-email VARCHAR(30) UNIQUE
-
-CHECK:
-gender CHAR(1) CHECK (gender IN ('M','F'))
-
-DEFAULT:
-salary NUMBER DEFAULT 10000
-
-----------------------------------------------------
-12. FOREIGN KEY
-----------------------------------------------------
-Syntax (column-level):
-dept_no NUMBER REFERENCES DEPARTMENT(dept_no)
-
-Syntax (table-level):
-FOREIGN KEY (dept_no) REFERENCES DEPARTMENT(dept_no)
-
-----------------------------------------------------
-13. ON DELETE CASCADE
-----------------------------------------------------
-Parent Table:
-CREATE TABLE DEPARTMENT (
-  dept_no NUMBER PRIMARY KEY,
-  dept_name VARCHAR(20)
-);
-
-Child Table:
-CREATE TABLE STUDENT (
-  reg_no NUMBER PRIMARY KEY,
-  name VARCHAR(20),
-  dept_no NUMBER
-    REFERENCES DEPARTMENT(dept_no)
-    ON DELETE CASCADE
-);
-
-Meaning:
-Delete parent → child rows auto deleted
-
-----------------------------------------------------
-14. JOIN (Two tables)
-----------------------------------------------------
-SELECT s.name, d.dept_name
-FROM STUDENT s, DEPARTMENT d
-WHERE s.dept_no = d.dept_no;
-
-----------------------------------------------------
-15. ALIAS (AS)
-----------------------------------------------------
-Column alias:
-SELECT COUNT(*) AS total_count FROM STUDENT;
-
-Table alias:
-FROM STUDENT s
-
-AS is optional:
-COUNT(*) total_count
-
-----------------------------------------------------
-16. AGGREGATE FUNCTIONS
-----------------------------------------------------
-COUNT(column)
-SUM(column)
-AVG(column)
-MIN(column)
-MAX(column)
-
-----------------------------------------------------
-17. GROUP BY
-----------------------------------------------------
-Rule:
-Every column in SELECT must be
-- in GROUP BY
-OR
-- an aggregate function
-
-COUNT:
-SELECT dept, COUNT(emp_id)
-FROM EMPLOYEE
-GROUP BY dept;
-
-SUM:
-SELECT dept, SUM(salary)
-FROM EMPLOYEE
-GROUP BY dept;
-
-AVG:
-SELECT dept, AVG(salary)
-FROM EMPLOYEE
-GROUP BY dept;
-
-MIN & MAX:
-SELECT dept, MIN(salary), MAX(salary)
-FROM EMPLOYEE
-GROUP BY dept;
-
-----------------------------------------------------
-18. GROUP BY + HAVING
-----------------------------------------------------
-HAVING is used for aggregate condition
-
-SELECT dept, COUNT(*)
-FROM EMPLOYEE
-GROUP BY dept
-HAVING COUNT(*) > 2;
-
-----------------------------------------------------
-19. GROUP BY + WHERE
-----------------------------------------------------
-WHERE filters rows BEFORE grouping
-
-SELECT dept, AVG(salary)
-FROM EMPLOYEE
-WHERE salary > 30000
-GROUP BY dept;
-
-----------------------------------------------------
-20. GROUP BY + JOIN (EXAM FAV)
-----------------------------------------------------
-SELECT s.srno, COUNT(a.department)
-FROM service_request s, assign a
-WHERE s.srno = a.srno
-GROUP BY s.srno;
-
-----------------------------------------------------
-21. ORDER BY
-----------------------------------------------------
-Ascending:
-ORDER BY salary;
-
-Descending:
-ORDER BY salary DESC;
-
-----------------------------------------------------
-22. BUILT-IN FUNCTIONS
-----------------------------------------------------
-UPPER(name)
-LOWER(name)
-LENGTH(name)
-NVL(column, 0)
-ROUND(salary, -2)
-TO_CHAR(dob, 'DD-MON-YYYY')
-
-----------------------------------------------------
-23. LIKE (Pattern Matching)
-----------------------------------------------------
-SELECT * FROM STUDENT
-WHERE name LIKE '%oa%';
-
-----------------------------------------------------
-24. SET OPERATIONS
-----------------------------------------------------
-UNION:
-SELECT col FROM A
-UNION
-SELECT col FROM B;
-
-INTERSECT:
-SELECT col FROM A
-INTERSECT
-SELECT col FROM B;
-
-MINUS:
-SELECT col FROM A
-MINUS
-SELECT col FROM B;
-
-----------------------------------------------------
-25. EXISTS / NOT EXISTS
-----------------------------------------------------
-EXISTS:
-SELECT s.name
-FROM STUDENT s
-WHERE EXISTS (
-  SELECT *
-  FROM ENROLL e
-  WHERE e.id = s.id
-);
-
-NOT EXISTS:
-SELECT s.name
-FROM STUDENT s
-WHERE NOT EXISTS (
-  SELECT *
-  FROM ENROLL e
-  WHERE e.id = s.id
-);
-
-----------------------------------------------------
-26. SERVICE REQUEST – FULL QUESTIONS
-----------------------------------------------------
-Q1(a):
-SELECT s.srno, s.sr_date
-FROM service_request s, assign a
-WHERE s.srno = a.srno
-  AND a.department = 'NH Repair'
-ORDER BY s.sr_date DESC;
-
-Q1(b):
-SELECT s.srno, s.request
-FROM service_request s, assign a
-WHERE s.srno = a.srno
-GROUP BY s.srno, s.request
-HAVING COUNT(a.department) >= 2;
-
-Q2(a):
-SELECT s.srno, s.request
-FROM service_request s, assign a
-WHERE s.srno = a.srno
-  AND s.request LIKE '%oa%'
-  AND a.department = 'PWD'
-ORDER BY s.srno DESC;
-
-Q2(b):
-SELECT s.srno, COUNT(a.department) AS dept_count
-FROM service_request s, assign a
-WHERE s.srno = a.srno
-  AND EXTRACT(YEAR FROM s.sr_date) = 2022
-GROUP BY s.srno;
-
-----------------------------------------------------
-FINAL GOLDEN RULES
-----------------------------------------------------
-WHERE  → row condition
-HAVING → group condition
-JOIN   → match common key
-FOREIGN KEY → child depends on parent
-CASCADE → parent delete = child delete
-AGGREGATE → GROUP BY needed
-
-====================================================
-END OF SQL NOTES
-====================================================
-1. BASIC TERMS
---------------
-Database : Collection of tables
-Table    : Data stored in rows and columns
-Column   : One type of data (name, salary, dept)
-Row      : One complete record
-
---------------------------------
-
-2. SQL COMMAND TYPES
--------------------
-DDL (Structure):
-- CREATE
-- ALTER
-- DROP
-- TRUNCATE
-
-DML (Data):
-- INSERT
-- SELECT
-- UPDATE
-- DELETE
-
-TCL (Transaction):
-- COMMIT
-- ROLLBACK
-- SAVEPOINT
-
---------------------------------
-
-3. DATA TYPES (COMMON)
----------------------
-NUMBER(size)
-VARCHAR(size)
-DATE
-
---------------------------------
-
-4. CREATE TABLE
----------------
-CREATE TABLE STUDENT (
-  reg_no NUMBER PRIMARY KEY,
-  name VARCHAR(20),
-  dob DATE
-);
-
---------------------------------
-
-5. INSERT
----------
-INSERT INTO STUDENT VALUES (101, 'RAM', '10-AUG-2002');
-COMMIT;
-
---------------------------------
-
-6. SELECT
----------
-SELECT * FROM STUDENT;
-SELECT name FROM STUDENT WHERE reg_no = 101;
-
---------------------------------
-
-7. WHERE
---------
-Used to filter ROWS
-Runs before GROUP BY
-
-SELECT * FROM STUDENT WHERE name = 'RAM';
-
---------------------------------
-
-8. UPDATE
----------
-UPDATE STUDENT
-SET name = 'RAHUL'
-WHERE reg_no = 101;
-
---------------------------------
-
-9. DELETE vs TRUNCATE vs DROP
-----------------------------
-DELETE    : Removes rows (ROLLBACK possible)
-TRUNCATE  : Removes all rows (NO rollback)
-DROP      : Deletes table completely
-
---------------------------------
-
-10. COMMIT & ROLLBACK
---------------------
-COMMIT;    -- save permanently
-ROLLBACK;  -- undo changes
-    </div>
-    <button onclick="copyText('text1')">📋 Copy SQL Plus Revision</button>
-
-    <h2>🛠 SERVICE REQUEST – QUESTIONS & ANSWERS</h2>
-    <div class="box" id="text2">
-====================================
-SERVICE REQUEST – 4 QUESTIONS & ANSWERS
-====================================
-
-TABLES:
---------
-service_request(srno, request, sr_date)
-assign(srno, department)
-
-------------------------------------
-
-Q1 (a)
-------
-Find all the service request numbers that have been assigned to
-NH Repair department and sort them in descending order of sr_date.
-
-ANSWER:
--------
-
-SELECT s.srno, s.sr_date
-FROM service_request s, assign a
-WHERE s.srno = a.srno
-  AND a.department = 'NH Repair'
-ORDER BY s.sr_date DESC;
-
-------------------------------------
-
-Q1 (b)
-------
-Find all the service requests that have been assigned to
-at least two departments.
-
-ANSWER:
--------
-
-SELECT s.srno, s.request
-FROM service_request s, assign a
-WHERE s.srno = a.srno
-GROUP BY s.srno, s.request
-HAVING COUNT(a.department) >= 2;
-
-------------------------------------
-
-Q2 (a)
-------
-Find all the service requests that contain 'oa' and are assigned
-to PWD department and sort them in descending order of srno.
-
-ANSWER:
--------
-
-SELECT s.srno, s.request
-FROM service_request s, assign a
-WHERE s.srno = a.srno
-  AND s.request LIKE '%oa%'
-  AND a.department = 'PWD'
-ORDER BY s.srno DESC;
-
-------------------------------------
-
-Q2 (b)
-------
-For service requests of year 2022, find the number of departments
-to which each service request has been assigned.
-
-ANSWER:
--------
-
-SELECT s.srno, COUNT(a.department) AS dept_count
-FROM service_request s, assign a
-WHERE s.srno = a.srno
-  AND EXTRACT(YEAR FROM s.sr_date) = 2022
-GROUP BY s.srno;
-    </div>
-    <button onclick="copyText('text2')">📋 Copy Service Request Q&A</button>
 
     <script>
-        function copyText(id) {
-            const text = document.getElementById(id).innerText;
-            navigator.clipboard.writeText(text).then(() => {
-                alert("Copied successfully ✅");
+        function showSection(id) {
+            ["home","register","challenge","settings"].forEach(sec =>
+                document.getElementById(sec).classList.add("hidden")
+            );
+
+            document.getElementById(id).classList.remove("hidden");
+
+            if (id === "challenge") {
+                populateDropdowns();
+                populateGames();
+            }
+
+            if (id === "settings") renderGamesList();
+        }
+
+        function goHome() {
+            showSection("home");
+            renderLeaderboard();
+        }
+
+        function getPlayers() {
+            return JSON.parse(localStorage.getItem("players") || "[]");
+        }
+
+        function savePlayers(players) {
+            localStorage.setItem("players", JSON.stringify(players));
+        }
+
+        function getGames() {
+            let games = JSON.parse(localStorage.getItem("games") || "null");
+
+            if (!games) {
+                games = [
+                    { name: "Table Tennis", points: 50 },
+                    { name: "Tennis", points: 60 },
+                    { name: "100 Meters Race", points: 40 },
+                    { name: "Badminton", points: 55 }
+                ];
+                localStorage.setItem("games", JSON.stringify(games));
+            }
+
+            return games;
+        }
+
+        function saveGames(games) {
+            localStorage.setItem("games", JSON.stringify(games));
+        }
+
+        function generateMITId(players) {
+            return "MIT" + String(players.length + 1).padStart(3, '0');
+        }
+
+        function registerPlayer() {
+            const input = document.getElementById("name");
+            const name = input.value.trim();
+
+            if (!name) return alert("Enter player name");
+
+            let players = getPlayers();
+
+            players.push({
+                id: generateMITId(players),
+                name: name,
+                points: 1000
+            });
+
+            savePlayers(players);
+            input.value = "";
+
+            alert("Player Registered!");
+            goHome();
+        }
+
+        function populateDropdowns() {
+            const players = getPlayers();
+            const winner = document.getElementById("winner");
+            const loser = document.getElementById("loser");
+
+            winner.innerHTML = "";
+            loser.innerHTML = "";
+
+            players.forEach(p => {
+                const option = `<option value="${p.id}">
+                    ${p.id} — ${p.name}
+                </option>`;
+
+                winner.innerHTML += option;
+                loser.innerHTML += option;
             });
         }
+
+        function populateGames() {
+            const games = getGames();
+            const gameSelect = document.getElementById("game");
+
+            gameSelect.innerHTML = "";
+
+            games.forEach(g => {
+                gameSelect.innerHTML += `<option value="${g.name}">
+                    ${g.name} (+${g.points})
+                </option>`;
+            });
+        }
+
+        function challengeMatch() {
+            const winnerId = document.getElementById("winner").value;
+            const loserId = document.getElementById("loser").value;
+            const gameName = document.getElementById("game").value;
+
+            if (winnerId === loserId)
+                return alert("Winner & Loser must be different");
+
+            let players = getPlayers();
+            const games = getGames();
+            const game = games.find(g => g.name === gameName);
+
+            const winner = players.find(p => p.id === winnerId);
+            const loser = players.find(p => p.id === loserId);
+
+            const winPoints = game.points;
+            const losePoints = Math.floor(winPoints / 2);
+
+            winner.points += winPoints;
+            loser.points -= losePoints;
+
+            savePlayers(players);
+
+            alert("Result Updated!");
+            goHome();
+        }
+
+        function renderLeaderboard() {
+            const players = getPlayers().sort((a,b) => b.points - a.points);
+            const body = document.getElementById("leaderboard-body");
+
+            body.innerHTML = "";
+
+            players.forEach((p, index) => {
+                body.innerHTML += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${p.id}</td>
+                        <td>${p.name}</td>
+                        <td>${p.points}</td>
+                    </tr>`;
+            });
+        }
+
+        function addGame() {
+            const name = document.getElementById("gameName").value.trim();
+            const points = parseInt(document.getElementById("gamePoints").value);
+
+            if (!name || !points) return alert("Enter valid values");
+
+            let games = getGames();
+            games.push({ name, points });
+
+            saveGames(games);
+
+            alert("Game Added!");
+            showSection("settings");
+        }
+
+        function renderGamesList() {
+            const games = getGames();
+            const list = document.getElementById("gamesList");
+
+            list.innerHTML = "";
+
+            games.forEach(g => {
+                list.innerHTML += `<div>${g.name} → +${g.points}</div>`;
+            });
+        }
+
+        function resetSystem() {
+            localStorage.clear();
+            alert("System Reset!");
+            goHome();
+        }
+
+        window.onload = renderLeaderboard;
     </script>
+</head>
+
+<body>
+
+<header>
+    <div>Sports Ladder Management System</div>
+    <div class="settings" onclick="showSection('settings')">⚙</div>
+</header>
+
+<div class="container">
+
+    <div id="home" class="card">
+        <h2>Leaderboard</h2>
+        <table>
+            <tr>
+                <th>Rank</th>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Points</th>
+            </tr>
+            <tbody id="leaderboard-body"></tbody>
+        </table>
+
+        <button onclick="showSection('register')">Register Player</button>
+        <button onclick="showSection('challenge')">Challenge Match</button>
+    </div>
+
+    <div id="register" class="card hidden">
+        <h2>Register Player</h2>
+
+        <label>Player Name</label>
+        <input id="name" type="text" placeholder="Enter Player Name">
+
+        <button onclick="registerPlayer()">Submit</button>
+        <button class="back-btn" onclick="goHome()">Back</button>
+    </div>
+
+    <div id="challenge" class="card hidden">
+        <h2>Challenge Match</h2>
+
+        <label>Select Game</label>
+        <select id="game"></select>
+
+        <label>Select Winner</label>
+        <select id="winner"></select>
+
+        <label>Select Loser</label>
+        <select id="loser"></select>
+
+        <button onclick="challengeMatch()">Submit Result</button>
+        <button class="back-btn" onclick="goHome()">Back</button>
+    </div>
+
+    <div id="settings" class="card hidden">
+        <h2>Settings</h2>
+
+        <div id="gamesList"></div>
+
+        <label>New Game Name</label>
+        <input id="gameName" type="text">
+
+        <label>Winner Points</label>
+        <input id="gamePoints" type="number">
+
+        <button onclick="addGame()">Add Game</button>
+        <button class="danger" onclick="resetSystem()">Reset System</button>
+        <button class="back-btn" onclick="goHome()">Back</button>
+    </div>
+
+</div>
 
 </body>
 </html>
-
-
-
