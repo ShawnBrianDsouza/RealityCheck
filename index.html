@@ -1,123 +1,600 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Hotel Management System</title>
-    <style>
-        body {
-            font-family: Arial;
-            padding: 20px;
-        }
-        input, select, button {
-            margin: 5px;
-            padding: 8px;
-        }
-        textarea {
-            width: 100%;
-            height: 150px;
-            margin-top: 10px;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ShopZone — Online Shopping</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, Helvetica, sans-serif; background: #eaeded; color: #0f1111; min-height: 100vh; }
+    a { color: inherit; text-decoration: none; }
+    button { cursor: pointer; font-family: inherit; }
+    img { max-width: 100%; display: block; }
+
+    /* Header */
+    .header-top { background: #131921; color: #fff; padding: 8px 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .logo { font-size: 26px; font-weight: bold; color: #fff; letter-spacing: -1px; }
+    .logo span { color: #ff9900; }
+    .deliver { font-size: 12px; line-height: 1.3; padding: 4px 8px; border: 1px solid transparent; border-radius: 2px; }
+    .deliver:hover { border-color: #fff; }
+    .deliver b { display: block; font-size: 14px; }
+    .search-wrap { flex: 1; min-width: 200px; display: flex; max-width: 800px; }
+    .search-wrap select { background: #f3f3f3; border: none; padding: 10px; border-radius: 4px 0 0 4px; font-size: 12px; }
+    .search-wrap input { flex: 1; border: none; padding: 10px 14px; font-size: 15px; }
+    .search-wrap button { background: #febd69; border: none; padding: 0 18px; border-radius: 0 4px 4px 0; font-size: 18px; }
+    .search-wrap button:hover { background: #f3a847; }
+    .header-actions { display: flex; gap: 4px; align-items: center; }
+    .header-btn { color: #fff; font-size: 12px; padding: 8px 10px; border: 1px solid transparent; border-radius: 2px; background: none; text-align: left; }
+    .header-btn:hover { border-color: #fff; }
+    .header-btn b { display: block; font-size: 14px; }
+    .cart-btn { position: relative; display: flex; align-items: flex-end; gap: 4px; padding: 8px 10px; }
+    .cart-btn .icon { font-size: 28px; }
+    .cart-count { position: absolute; top: 2px; left: 18px; background: #f08804; color: #fff; font-size: 14px; font-weight: bold; padding: 0 6px; border-radius: 10px; min-width: 20px; text-align: center; }
+    .nav-bar { background: #232f3e; color: #fff; padding: 8px 16px; display: flex; gap: 16px; flex-wrap: wrap; font-size: 14px; }
+    .nav-bar a, .nav-bar button { color: #fff; background: none; border: none; padding: 4px 8px; border-radius: 2px; }
+    .nav-bar a:hover, .nav-bar button:hover { outline: 1px solid #fff; }
+
+    /* Hero */
+    .hero { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 48px 24px; text-align: center; margin-bottom: 8px; }
+    .hero h1 { font-size: 32px; margin-bottom: 8px; }
+    .hero p { opacity: 0.9; }
+
+    /* Layout */
+    .container { max-width: 1400px; margin: 0 auto; padding: 16px; }
+    .section-title { font-size: 21px; font-weight: 700; margin: 20px 0 12px; padding-left: 4px; }
+    .categories { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+    .cat-chip { background: #fff; border: 1px solid #ddd; padding: 10px 16px; border-radius: 20px; font-size: 14px; }
+    .cat-chip:hover, .cat-chip.active { background: #232f3e; color: #fff; border-color: #232f3e; }
+
+    /* Products */
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+    .card { background: #fff; padding: 16px; border-radius: 4px; display: flex; flex-direction: column; transition: box-shadow 0.2s; }
+    .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+    .card-img { height: 200px; object-fit: contain; margin-bottom: 12px; background: #f7f7f7; border-radius: 4px; }
+    .card h3 { font-size: 14px; font-weight: 400; line-height: 1.4; flex: 1; margin-bottom: 8px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .stars { color: #ffa41c; font-size: 14px; margin-bottom: 4px; }
+    .stars span { color: #007185; font-size: 12px; margin-left: 4px; }
+    .price { font-size: 22px; color: #b12704; }
+    .price small { font-size: 13px; color: #565959; text-decoration: line-through; margin-left: 6px; }
+    .prime { color: #007185; font-size: 12px; font-weight: bold; margin: 4px 0; }
+    .card-btns { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+    .btn-yellow { background: #ffd814; border: 1px solid #fcd200; border-radius: 8px; padding: 8px; font-size: 13px; }
+    .btn-yellow:hover { background: #f7ca00; }
+    .btn-orange { background: #ffa41c; border: 1px solid #ff8f00; border-radius: 8px; padding: 8px; font-size: 13px; }
+    .btn-orange:hover { background: #fa8900; }
+
+    /* Modal */
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: flex-start; justify-content: center; padding: 24px; overflow-y: auto; }
+    .overlay.open { display: flex; }
+    .modal { background: #fff; max-width: 1000px; width: 100%; border-radius: 8px; padding: 24px; margin: auto; position: relative; }
+    .modal-close { position: absolute; top: 12px; right: 16px; font-size: 28px; background: none; border: none; color: #555; }
+    .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    @media (max-width: 700px) { .modal-grid { grid-template-columns: 1fr; } }
+    .modal-img { max-height: 400px; object-fit: contain; margin: 0 auto; }
+    .modal h2 { font-size: 22px; font-weight: 400; margin-bottom: 8px; }
+    .modal .price { font-size: 28px; margin: 12px 0; }
+    .modal-features { margin: 16px 0; font-size: 14px; line-height: 1.8; }
+    .modal-features li { margin-left: 20px; }
+    .qty-row { display: flex; align-items: center; gap: 8px; margin: 12px 0; }
+    .qty-row select { padding: 8px; border-radius: 8px; border: 1px solid #888; }
+
+    /* Cart page */
+    .page { display: none; }
+    .page.active { display: block; }
+    .cart-layout { display: grid; grid-template-columns: 1fr 320px; gap: 20px; }
+    @media (max-width: 800px) { .cart-layout { grid-template-columns: 1fr; } }
+    .cart-item { background: #fff; padding: 16px; margin-bottom: 12px; display: grid; grid-template-columns: 120px 1fr auto; gap: 16px; align-items: start; border-radius: 4px; }
+    .cart-item img { height: 120px; object-fit: contain; }
+    .cart-summary { background: #fff; padding: 20px; border-radius: 4px; height: fit-content; }
+    .cart-summary .total { font-size: 18px; margin: 12px 0; }
+    .btn-checkout { width: 100%; background: #ffd814; border: none; padding: 12px; border-radius: 8px; font-size: 14px; margin-top: 8px; }
+    .btn-checkout:hover { background: #f7ca00; }
+    .empty { text-align: center; padding: 60px 20px; background: #fff; border-radius: 4px; }
+    .empty h2 { margin-bottom: 12px; }
+
+    /* Checkout */
+    .form-box { background: #fff; padding: 24px; border-radius: 4px; max-width: 600px; }
+    .form-box label { display: block; font-size: 13px; font-weight: bold; margin: 12px 0 4px; }
+    .form-box input, .form-box select { width: 100%; padding: 10px; border: 1px solid #888; border-radius: 4px; font-size: 14px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .btn-primary { background: #ffa41c; border: 1px solid #ff8f00; padding: 12px 24px; border-radius: 8px; font-size: 14px; margin-top: 16px; }
+    .btn-primary:hover { background: #fa8900; }
+    .success-box { background: #fff; padding: 40px; text-align: center; border-radius: 4px; max-width: 500px; margin: 40px auto; }
+    .success-box h2 { color: #067d62; margin-bottom: 12px; }
+
+    /* Footer */
+    footer { background: #232f3e; color: #fff; margin-top: 40px; padding: 40px 24px 20px; text-align: center; }
+    footer .back-top { background: #37475a; padding: 16px; margin: -40px -24px 24px; cursor: pointer; }
+    footer p { font-size: 12px; color: #ddd; margin-top: 16px; }
+
+    .hidden { display: none !important; }
+    .toast { position: fixed; bottom: 24px; right: 24px; background: #232f3e; color: #fff; padding: 14px 20px; border-radius: 8px; z-index: 200; animation: slideIn 0.3s; }
+    @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } }
+  </style>
 </head>
 <body>
 
-    <h2>Hotel Management System</h2>
+  <header>
+    <div class="header-top">
+      <a href="#" class="logo" onclick="goHome(); return false;">shop<span>Zone</span></a>
+      <div class="deliver">
+        <span>Deliver to</span>
+        <b id="locationLabel">United States</b>
+      </div>
+      <form class="search-wrap" onsubmit="doSearch(event)">
+        <select id="searchCategory">
+          <option value="">All</option>
+        </select>
+        <input type="text" id="searchInput" placeholder="Search ShopZone" />
+        <button type="submit">🔍</button>
+      </form>
+      <div class="header-actions">
+        <button class="header-btn" onclick="showPage('account')">
+          <span>Hello, <span id="userName">Sign in</span></span>
+          <b>Account & Lists</b>
+        </button>
+        <button class="header-btn" onclick="showPage('orders')">
+          <span>Returns</span>
+          <b>& Orders</b>
+        </button>
+        <button class="cart-btn header-btn" onclick="showPage('cart')">
+          <span class="icon">🛒</span>
+          <span class="cart-count" id="cartCount">0</span>
+          <b>Cart</b>
+        </button>
+      </div>
+    </div>
+    <nav class="nav-bar">
+      <button onclick="toggleMenu()">☰ All</button>
+      <a href="#" onclick="filterCat(''); return false;">Today's Deals</a>
+      <a href="#" onclick="filterCat('electronics'); return false;">Electronics</a>
+      <a href="#" onclick="filterCat('fashion'); return false;">Fashion</a>
+      <a href="#" onclick="filterCat('home'); return false;">Home</a>
+      <a href="#" onclick="filterCat('books'); return false;">Books</a>
+      <a href="#" onclick="filterCat('sports'); return false;">Sports</a>
+      <a href="#" onclick="filterCat('beauty'); return false;">Beauty</a>
+      <a href="#" onclick="filterCat('grocery'); return false;">Grocery</a>
+    </nav>
+  </header>
 
-    <label>Room Number:</label>
-    <input type="number" id="roomNo"><br>
+  <!-- HOME -->
+  <div id="page-home" class="page active">
+    <div class="hero">
+      <h1>Spring Sale — Up to 40% off</h1>
+      <p>Free delivery on millions of items with Prime</p>
+    </div>
+    <div class="container">
+      <div class="categories" id="categoryChips"></div>
+      <h2 class="section-title" id="resultsTitle">Recommended for you</h2>
+      <div class="grid" id="productGrid"></div>
+    </div>
+  </div>
 
-    <label>Room Type:</label>
-    <select id="type">
-        <option>Single</option>
-        <option>Double</option>
-        <option>Deluxe</option>
-    </select><br>
+  <!-- CART -->
+  <div id="page-cart" class="page">
+    <div class="container" style="padding-top:24px">
+      <h2 class="section-title">Shopping Cart</h2>
+      <div id="cartContent"></div>
+    </div>
+  </div>
 
-    <label>Price:</label>
-    <input type="number" id="price"><br>
+  <!-- CHECKOUT -->
+  <div id="page-checkout" class="page">
+    <div class="container" style="padding-top:24px">
+      <h2 class="section-title">Checkout</h2>
+      <div id="checkoutContent"></div>
+    </div>
+  </div>
 
-    <label>Customer Name:</label>
-    <input type="text" id="customer"><br>
+  <!-- ACCOUNT -->
+  <div id="page-account" class="page">
+    <div class="container" style="padding-top:24px">
+      <h2 class="section-title">Your Account</h2>
+      <div class="form-box" id="accountForm"></div>
+    </div>
+  </div>
 
-    <label>Contact:</label>
-    <input type="text" id="contact"><br>
+  <!-- ORDERS -->
+  <div id="page-orders" class="page">
+    <div class="container" style="padding-top:24px">
+      <h2 class="section-title">Your Orders</h2>
+      <div id="ordersContent"></div>
+    </div>
+  </div>
 
-    <br>
+  <!-- PRODUCT MODAL -->
+  <div class="overlay" id="productModal" onclick="if(event.target===this)closeModal()">
+    <div class="modal" id="modalBody"></div>
+  </div>
 
-    <button onclick="addRoom()">Add Room</button>
-    <button onclick="viewRooms()">View Rooms</button>
-    <button onclick="bookRoom()">Book Room</button>
-    <button onclick="checkoutRoom()">Checkout</button>
+  <footer>
+    <div class="back-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">Back to top</div>
+    <p>© 2026 ShopZone — Demo store (open this HTML file in any browser)</p>
+  </footer>
 
-    <textarea id="display" readonly></textarea>
-    <p id="message"></p>
+  <script>
+    const PRODUCTS = [
+      { id:1, title:"Wireless Bluetooth Headphones — Noise Cancelling, 40hr Battery", price:79.99, was:129.99, cat:"electronics", rating:4.5, reviews:12847, prime:true, img:"https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop", features:["Active noise cancellation","40-hour battery","Bluetooth 5.3","Foldable design"] },
+      { id:2, title:"4K Ultra HD Smart TV 55\" — HDR, Alexa Built-in", price:449.99, was:599.99, cat:"electronics", rating:4.6, reviews:9234, prime:true, img:"https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=400&h=400&fit=crop", features:["4K UHD resolution","HDR10+","Smart apps built-in","3 HDMI ports"] },
+      { id:3, title:"Stainless Steel Coffee Maker — 12 Cup Programmable", price:49.99, was:69.99, cat:"home", rating:4.4, reviews:5621, prime:true, img:"https://images.unsplash.com/photo-1517668808822-9ebb02af8700?w=400&h=400&fit=crop", features:["12-cup capacity","24hr programmable timer","Auto shut-off","Reusable filter"] },
+      { id:4, title:"Men's Running Shoes — Lightweight Breathable Mesh", price:64.99, was:89.99, cat:"fashion", rating:4.3, reviews:3421, prime:false, img:"https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop", features:["Breathable mesh upper","Cushioned sole","True to size","Multiple colors"] },
+      { id:5, title:"The Midnight Library — Bestseller Fiction Paperback", price:12.99, was:18.99, cat:"books", rating:4.7, reviews:45231, prime:true, img:"https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=400&fit=crop", features:["#1 NYT Bestseller","352 pages","Thought-provoking story","Gift-worthy"] },
+      { id:6, title:"Yoga Mat — Extra Thick Non-Slip Exercise Mat", price:29.99, was:44.99, cat:"sports", rating:4.5, reviews:8901, prime:true, img:"https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?w=400&h=400&fit=crop", features:["6mm thick cushioning","Non-slip texture","Includes carrying strap","72\" x 24\""] },
+      { id:7, title:"Vitamin C Serum — Anti-Aging Face Serum 1oz", price:19.99, was:34.99, cat:"beauty", rating:4.4, reviews:15672, prime:true, img:"https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=400&h=400&fit=crop", features:["20% Vitamin C","Hyaluronic acid","Cruelty-free","Dermatologist tested"] },
+      { id:8, title:"Organic Extra Virgin Olive Oil — 2 Liter", price:24.99, was:32.99, cat:"grocery", rating:4.6, reviews:2103, prime:true, img:"https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&h=400&fit=crop", features:["Cold-pressed","USDA Organic","Imported from Italy","2L family size"] },
+      { id:9, title:"Laptop Stand Aluminum — Ergonomic Adjustable", price:34.99, was:49.99, cat:"electronics", rating:4.5, reviews:4521, prime:true, img:"https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=400&h=400&fit=crop", features:["Aluminum alloy","6 height levels","Fits 10-17\" laptops","Cable management"] },
+      { id:10, title:"Women's Leather Handbag — Crossbody Tote", price:89.99, was:129.99, cat:"fashion", rating:4.2, reviews:1876, prime:false, img:"https://images.unsplash.com/photo-1584917865442-de89d76a862a?w=400&h=400&fit=crop", features:["Genuine leather","Adjustable strap","Multiple compartments","Classic design"] },
+      { id:11, title:"Robot Vacuum — Smart Mapping, App Control", price:299.99, was:399.99, cat:"home", rating:4.4, reviews:7234, prime:true, img:"https://images.unsplash.com/photo-1558317374-067fb5f3f962?w=400&h=400&fit=crop", features:["LiDAR navigation","120 min runtime","App + voice control","Auto empty dock"] },
+      { id:12, title:"Board Game Bundle — Family Game Night 5-Pack", price:39.99, was:59.99, cat:"toys", rating:4.8, reviews:1234, prime:true, img:"https://images.unsplash.com/photo-1611195974226-ef44fac423c7?w=400&h=400&fit=crop", features:["5 popular games","Ages 8+","2-8 players","Hours of fun"] },
+      { id:13, title:"Wireless Mouse — Ergonomic Silent Click", price:24.99, was:39.99, cat:"electronics", rating:4.3, reviews:9876, prime:true, img:"https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=400&h=400&fit=crop", features:["2.4GHz wireless","Silent buttons","1600 DPI","18-month battery"] },
+      { id:14, title:"Cast Iron Skillet 12\" — Pre-Seasoned", price:29.99, was:44.99, cat:"home", rating:4.7, reviews:23456, prime:true, img:"https://images.unsplash.com/photo-1585441121521-48f330ead9a0?w=400&h=400&fit=crop", features:["Pre-seasoned","Oven safe","Even heat distribution","Lifetime durability"] },
+      { id:15, title:"Protein Powder Whey — Chocolate 5lb", price:54.99, was:69.99, cat:"grocery", rating:4.5, reviews:6789, prime:true, img:"https://images.unsplash.com/photo-1593095948071-474c5cc2989d?w=400&h=400&fit=crop", features:["25g protein per scoop","5lb value size","Low sugar","Mixes easily"] },
+      { id:16, title:"Sunglasses Polarized UV400 — Classic Aviator", price:19.99, was:39.99, cat:"fashion", rating:4.1, reviews:4521, prime:false, img:"https://images.unsplash.com/photo-1572635196233-8f7293f9c0c0?w=400&h=400&fit=crop", features:["Polarized lenses","UV400 protection","Metal frame","Includes case"] },
+    ];
 
-<script>
-    // Store rooms
-    let rooms = [];
+    const CATS = [
+      { slug:"", name:"All" },
+      { slug:"electronics", name:"Electronics" },
+      { slug:"home", name:"Home" },
+      { slug:"fashion", name:"Fashion" },
+      { slug:"books", name:"Books" },
+      { slug:"sports", name:"Sports" },
+      { slug:"beauty", name:"Beauty" },
+      { slug:"grocery", name:"Grocery" },
+      { slug:"toys", name:"Toys" },
+    ];
 
-    // Add Room
-    function addRoom() {
-        let roomNo = document.getElementById("roomNo").value;
-        let type = document.getElementById("type").value;
-        let price = document.getElementById("price").value;
+    let cart = JSON.parse(localStorage.getItem("sz_cart") || "[]");
+    let user = JSON.parse(localStorage.getItem("sz_user") || "null");
+    let orders = JSON.parse(localStorage.getItem("sz_orders") || "[]");
+    let currentFilter = "";
+    let searchQuery = "";
 
-        rooms.push({
-            roomNumber: parseInt(roomNo),
-            type: type,
-            price: parseFloat(price),
-            available: true
-        });
-
-        document.getElementById("message").innerText = "Room Added!";
+    function save() {
+      localStorage.setItem("sz_cart", JSON.stringify(cart));
+      localStorage.setItem("sz_user", JSON.stringify(user));
+      localStorage.setItem("sz_orders", JSON.stringify(orders));
+      updateCartBadge();
+      if (user) document.getElementById("userName").textContent = user.name.split(" ")[0];
+      else document.getElementById("userName").textContent = "Sign in";
     }
 
-    // View Rooms
-    function viewRooms() {
-        let display = document.getElementById("display");
-        display.value = "";
-
-        rooms.forEach(r => {
-            display.value += 
-                `Room: ${r.roomNumber} | Type: ${r.type} | Price: ${r.price} | Available: ${r.available}\n`;
-        });
+    function stars(n) {
+      const full = Math.floor(n);
+      const half = n % 1 >= 0.5;
+      let s = "";
+      for (let i = 0; i < 5; i++) {
+        if (i < full) s += "★";
+        else if (i === full && half) s += "⯨";
+        else s += "☆";
+      }
+      return s;
     }
 
-    // Book Room
-    function bookRoom() {
-        let roomNo = parseInt(document.getElementById("roomNo").value);
-        let customer = document.getElementById("customer").value;
-
-        let found = false;
-
-        rooms.forEach(r => {
-            if (r.roomNumber === roomNo) {
-                found = true;
-                if (r.available) {
-                    r.available = false;
-                    document.getElementById("message").innerText = "Room booked for " + customer;
-                } else {
-                    document.getElementById("message").innerText = "Already booked!";
-                }
-            }
-        });
-
-        if (!found) {
-            document.getElementById("message").innerText = "Room not found!";
-        }
+    function formatPrice(p) {
+      return "$" + p.toFixed(2);
     }
 
-    // Checkout
-    function checkoutRoom() {
-        let roomNo = parseInt(document.getElementById("roomNo").value);
-
-        rooms.forEach(r => {
-            if (r.roomNumber === roomNo) {
-                r.available = true;
-                document.getElementById("message").innerText = "Checked out!";
-            }
-        });
+    function getProduct(id) {
+      return PRODUCTS.find(p => p.id === id);
     }
-</script>
 
+    function cartTotal() {
+      return cart.reduce((sum, item) => {
+        const p = getProduct(item.id);
+        return sum + (p ? p.price * item.qty : 0);
+      }, 0);
+    }
+
+    function cartCount() {
+      return cart.reduce((s, i) => s + i.qty, 0);
+    }
+
+    function updateCartBadge() {
+      document.getElementById("cartCount").textContent = cartCount();
+    }
+
+    function toast(msg) {
+      const el = document.createElement("div");
+      el.className = "toast";
+      el.textContent = msg;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 2500);
+    }
+
+    function addToCart(id, qty = 1) {
+      const existing = cart.find(c => c.id === id);
+      if (existing) existing.qty += qty;
+      else cart.push({ id, qty });
+      save();
+      toast("Added to cart");
+    }
+
+    function showPage(name) {
+      document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+      document.getElementById("page-" + name).classList.add("active");
+      if (name === "cart") renderCart();
+      if (name === "checkout") renderCheckout();
+      if (name === "account") renderAccount();
+      if (name === "orders") renderOrders();
+      window.scrollTo(0, 0);
+    }
+
+    function goHome() {
+      showPage("home");
+    }
+
+    function filterCat(slug) {
+      currentFilter = slug;
+      searchQuery = "";
+      document.getElementById("searchInput").value = "";
+      document.querySelectorAll(".cat-chip").forEach(c => {
+        c.classList.toggle("active", c.dataset.cat === slug);
+      });
+      renderProducts();
+      showPage("home");
+    }
+
+    function doSearch(e) {
+      e.preventDefault();
+      searchQuery = document.getElementById("searchInput").value.trim().toLowerCase();
+      const catSel = document.getElementById("searchCategory").value;
+      if (catSel) currentFilter = catSel;
+      renderProducts();
+      showPage("home");
+    }
+
+    function getFiltered() {
+      return PRODUCTS.filter(p => {
+        const matchCat = !currentFilter || p.cat === currentFilter;
+        const matchSearch = !searchQuery ||
+          p.title.toLowerCase().includes(searchQuery) ||
+          p.cat.includes(searchQuery);
+        return matchCat && matchSearch;
+      });
+    }
+
+    function renderProducts() {
+      const list = getFiltered();
+      const title = searchQuery
+        ? `Results for "${document.getElementById("searchInput").value}"`
+        : currentFilter
+          ? CATS.find(c => c.slug === currentFilter)?.name + " — ShopZone"
+          : "Recommended for you";
+      document.getElementById("resultsTitle").textContent = title + ` (${list.length})`;
+
+      document.getElementById("productGrid").innerHTML = list.length
+        ? list.map(p => `
+          <div class="card">
+            <img class="card-img" src="${p.img}" alt="" loading="lazy" onclick="openProduct(${p.id})" style="cursor:pointer" />
+            <h3 onclick="openProduct(${p.id})" style="cursor:pointer">${p.title}</h3>
+            <div class="stars">${stars(p.rating)} <span>${p.reviews.toLocaleString()}</span></div>
+            ${p.prime ? '<div class="prime">✓ prime</div>' : ""}
+            <div class="price">${formatPrice(p.price)} ${p.was ? `<small>${formatPrice(p.was)}</small>` : ""}</div>
+            <div class="card-btns">
+              <button class="btn-yellow" onclick="addToCart(${p.id})">Add to Cart</button>
+              <button class="btn-orange" onclick="addToCart(${p.id}); showPage('cart')">Buy Now</button>
+            </div>
+          </div>
+        `).join("")
+        : '<div class="empty"><h2>No products found</h2><p>Try a different search or category</p></div>';
+    }
+
+    function openProduct(id) {
+      const p = getProduct(id);
+      if (!p) return;
+      document.getElementById("modalBody").innerHTML = `
+        <button class="modal-close" onclick="closeModal()">×</button>
+        <div class="modal-grid">
+          <img class="modal-img" src="${p.img}" alt="" />
+          <div>
+            <h2>${p.title}</h2>
+            <div class="stars">${stars(p.rating)} <span>${p.reviews.toLocaleString()} ratings</span></div>
+            ${p.prime ? '<div class="prime">✓ FREE delivery with Prime</div>' : ""}
+            <div class="price">${formatPrice(p.price)} ${p.was ? `<small>List: ${formatPrice(p.was)}</small>` : ""}</div>
+            <p style="margin:12px 0;color:#067d62;font-size:14px">In Stock</p>
+            <ul class="modal-features">${p.features.map(f => `<li>${f}</li>`).join("")}</ul>
+            <div class="qty-row">
+              <label>Qty:</label>
+              <select id="modalQty">${[1,2,3,4,5,6,7,8,9,10].map(n => `<option value="${n}">${n}</option>`).join("")}</select>
+            </div>
+            <div class="card-btns" style="max-width:280px">
+              <button class="btn-yellow" onclick="addToCart(${p.id}, +document.getElementById('modalQty').value); closeModal()">Add to Cart</button>
+              <button class="btn-orange" onclick="addToCart(${p.id}, +document.getElementById('modalQty').value); closeModal(); showPage('cart')">Buy Now</button>
+            </div>
+          </div>
+        </div>
+      `;
+      document.getElementById("productModal").classList.add("open");
+    }
+
+    function closeModal() {
+      document.getElementById("productModal").classList.remove("open");
+    }
+
+    function renderCart() {
+      const el = document.getElementById("cartContent");
+      if (!cart.length) {
+        el.innerHTML = '<div class="empty"><h2>Your ShopZone Cart is empty</h2><p><button class="btn-yellow" onclick="goHome()">Shop today\'s deals</button></p></div>';
+        return;
+      }
+      const sub = cartTotal();
+      const tax = sub * 0.08;
+      const total = sub + tax;
+      el.innerHTML = `
+        <div class="cart-layout">
+          <div>
+            ${cart.map(item => {
+              const p = getProduct(item.id);
+              if (!p) return "";
+              return `
+                <div class="cart-item">
+                  <img src="${p.img}" alt="" />
+                  <div>
+                    <h3 style="font-size:15px;font-weight:400;margin-bottom:8px">${p.title}</h3>
+                    <div class="price" style="font-size:18px">${formatPrice(p.price)}</div>
+                    ${p.prime ? '<div class="prime">Eligible for FREE Shipping</div>' : ""}
+                    <div style="margin-top:12px;display:flex;gap:12px;align-items:center">
+                      <label>Qty: <select onchange="setQty(${p.id}, this.value)">${[1,2,3,4,5,6,7,8,9,10].map(n => `<option value="${n}" ${n==item.qty?"selected":""}>${n}</option>`).join("")}</select></label>
+                      <button style="background:none;border:none;color:#007185;font-size:13px" onclick="removeFromCart(${p.id})">Delete</button>
+                    </div>
+                  </div>
+                  <div class="price">${formatPrice(p.price * item.qty)}</div>
+                </div>
+              `;
+            }).join("")}
+          </div>
+          <div class="cart-summary">
+            <button class="btn-checkout" onclick="showPage('checkout')">Proceed to checkout (${cartCount()} items)</button>
+            <div class="total">Subtotal: <b>${formatPrice(sub)}</b></div>
+            <div style="font-size:13px;color:#565959">Tax (est.): ${formatPrice(tax)}</div>
+            <div class="total" style="font-size:20px;color:#b12704">Order total: <b>${formatPrice(total)}</b></div>
+          </div>
+        </div>
+      `;
+    }
+
+    function setQty(id, qty) {
+      const item = cart.find(c => c.id === id);
+      if (item) { item.qty = +qty; save(); renderCart(); }
+    }
+
+    function removeFromCart(id) {
+      cart = cart.filter(c => c.id !== id);
+      save();
+      renderCart();
+      toast("Item removed");
+    }
+
+    function renderCheckout() {
+      if (!cart.length) { showPage("cart"); return; }
+      const sub = cartTotal();
+      const tax = sub * 0.08;
+      const total = sub + tax;
+      document.getElementById("checkoutContent").innerHTML = `
+        <div class="cart-layout">
+          <div class="form-box">
+            <h3 style="margin-bottom:16px">1. Shipping address</h3>
+            <label>Full name</label><input id="shipName" value="${user?.name || ""}" />
+            <label>Street address</label><input id="shipStreet" placeholder="123 Main St" />
+            <div class="form-row">
+              <div><label>City</label><input id="shipCity" /></div>
+              <div><label>State</label><input id="shipState" /></div>
+            </div>
+            <div class="form-row">
+              <div><label>ZIP</label><input id="shipZip" /></div>
+              <div><label>Phone</label><input id="shipPhone" /></div>
+            </div>
+            <h3 style="margin:24px 0 16px">2. Payment (demo)</h3>
+            <label>Card number</label><input placeholder="4111 1111 1111 1111" />
+            <div class="form-row">
+              <div><label>Expiry</label><input placeholder="MM/YY" /></div>
+              <div><label>CVV</label><input placeholder="123" /></div>
+            </div>
+            <button class="btn-primary" onclick="placeOrder(${total})">Place your order — ${formatPrice(total)}</button>
+          </div>
+          <div class="cart-summary">
+            <h3>Order Summary</h3>
+            ${cart.map(item => {
+              const p = getProduct(item.id);
+              return p ? `<p style="font-size:13px;margin:8px 0">${item.qty}× ${p.title.slice(0,40)}… <b>${formatPrice(p.price * item.qty)}</b></p>` : "";
+            }).join("")}
+            <div class="total" style="color:#b12704">Total: ${formatPrice(total)}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function placeOrder(total) {
+      const name = document.getElementById("shipName").value.trim();
+      if (!name) { alert("Please enter your name"); return; }
+      const order = {
+        id: "114-" + Date.now(),
+        date: new Date().toISOString(),
+        items: cart.map(c => ({ ...c, product: getProduct(c.id) })),
+        total,
+        status: "processing"
+      };
+      orders.unshift(order);
+      cart = [];
+      if (!user) user = { name, email: name.toLowerCase().replace(/\s/g,"") + "@email.com" };
+      save();
+      document.getElementById("checkoutContent").innerHTML = `
+        <div class="success-box">
+          <h2>✓ Order placed!</h2>
+          <p>Order #${order.id}</p>
+          <p style="margin:16px 0">Thank you, ${name}. Your order of ${formatPrice(total)} is confirmed.</p>
+          <button class="btn-yellow" onclick="showPage('orders')">View orders</button>
+          <button class="btn-orange" style="margin-left:8px" onclick="goHome()">Continue shopping</button>
+        </div>
+      `;
+    }
+
+    function renderAccount() {
+      document.getElementById("accountForm").innerHTML = user ? `
+        <p><b>Signed in as:</b> ${user.name}</p>
+        <p style="margin:8px 0 16px;color:#565959">${user.email}</p>
+        <button class="btn-orange" onclick="signOut()">Sign out</button>
+      ` : `
+        <label>Your name</label><input id="accName" placeholder="John Doe" />
+        <label>Email</label><input id="accEmail" type="email" placeholder="you@email.com" />
+        <button class="btn-yellow" onclick="signIn()">Sign in</button>
+      `;
+    }
+
+    function signIn() {
+      const name = document.getElementById("accName").value.trim();
+      const email = document.getElementById("accEmail").value.trim();
+      if (!name || !email) { alert("Enter name and email"); return; }
+      user = { name, email };
+      save();
+      renderAccount();
+      toast("Welcome, " + name.split(" ")[0]);
+    }
+
+    function signOut() {
+      user = null;
+      save();
+      renderAccount();
+    }
+
+    function renderOrders() {
+      const el = document.getElementById("ordersContent");
+      if (!orders.length) {
+        el.innerHTML = '<div class="empty"><h2>No orders yet</h2><p>When you place an order, it will appear here.</p></div>';
+        return;
+      }
+      el.innerHTML = orders.map(o => `
+        <div style="background:#fff;padding:20px;margin-bottom:12px;border-radius:4px">
+          <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+            <span><b>ORDER PLACED</b><br>${new Date(o.date).toLocaleDateString()}</span>
+            <span><b>TOTAL</b><br>${formatPrice(o.total)}</span>
+            <span><b>ORDER #</b><br>${o.id}</span>
+            <span style="color:#067d62"><b>STATUS: ${o.status}</b></span>
+          </div>
+          ${o.items.map(i => i.product ? `
+            <div style="display:flex;gap:12px;margin-top:12px;padding-top:12px;border-top:1px solid #eee">
+              <img src="${i.product.img}" style="width:80px;height:80px;object-fit:contain" />
+              <div><p>${i.product.title}</p><p>Qty: ${i.qty} — ${formatPrice(i.product.price * i.qty)}</p></div>
+            </div>
+          ` : "").join("")}
+        </div>
+      `).join("");
+    }
+
+    function init() {
+      const sel = document.getElementById("searchCategory");
+      CATS.filter(c => c.slug).forEach(c => {
+        sel.innerHTML += `<option value="${c.slug}">${c.name}</option>`;
+      });
+      document.getElementById("categoryChips").innerHTML = CATS.map(c =>
+        `<button class="cat-chip" data-cat="${c.slug}" onclick="filterCat('${c.slug}')">${c.name}</button>`
+      ).join("");
+      save();
+      renderProducts();
+    }
+
+    init();
+  </script>
 </body>
 </html>
